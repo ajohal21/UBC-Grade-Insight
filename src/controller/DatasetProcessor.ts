@@ -21,9 +21,20 @@ export class DatasetProcessor {
 		try {
 			const data = await fs.readFile(filePath, "utf8");
 			const parsed = JSON.parse(data);
-			const sections = parsed.sections.map(
-				(s: any) => new Section(s.uuid, s.id, s.title, s.instructor, s.dept, s.year, s.avg, s.pass, s.fail, s.audit)
-			);
+			const sections = parsed.sections.map((s: any) => {
+				return new Section(
+					s.uuid,
+					s.id,
+					s.title,
+					s.instructor,
+					s.dept,
+					s.year,
+					s.avg,
+					s.pass,
+					s.fail,
+					s.audit
+				);
+			});
 			return new Dataset(datasetId, sections);
 		} catch (error) {
 			throw new Error(`Failed to load dataset ${datasetId}: ${error}`);
