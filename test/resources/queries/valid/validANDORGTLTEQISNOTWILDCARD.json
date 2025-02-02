@@ -1,0 +1,244 @@
+{
+	"title": "valid AND OR GT LT EQ IS NOT WILDCARD",
+	"input": {
+		"WHERE": {
+			"OR": [
+				{
+					"AND": [
+						{
+							"GT": {
+								"sections_avg": 70
+							}
+						},
+						{
+							"IS": {
+								"sections_dept": "cpsc"
+							}
+						},
+						{
+							"IS": {
+								"sections_instructor": "*patrice*"
+							}
+						}
+					]
+				},
+				{
+					"AND": [
+						{
+							"NOT": {
+								"LT": {
+									"sections_avg": 93
+								}
+							}
+						},
+						{
+							"IS": {
+								"sections_dept": "phar"
+							}
+						}
+					]
+				},
+				{
+					"AND": [
+						{
+							"IS": {
+								"sections_title": "hmn-cp interactn"
+							}
+						},
+						{
+							"EQ": {
+								"sections_year": 2009
+							}
+						}
+					]
+				}
+			]
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_dept",
+				"sections_avg",
+				"sections_year",
+				"sections_title"
+			],
+			"ORDER": "sections_year"
+		}
+	},
+	"errorExpected": false,
+	"expected": [
+		{
+			"sections_dept": "phar",
+			"sections_avg": 94.87,
+			"sections_year": 1900,
+			"sections_title": "admn of injectns"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 74.06,
+			"sections_year": 2007,
+			"sections_title": "adv alg dsgn&anl"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 70.95,
+			"sections_year": 2007,
+			"sections_title": "model comptn"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 78.42,
+			"sections_year": 2009,
+			"sections_title": "hmn-cp interactn"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 72.19,
+			"sections_year": 2010,
+			"sections_title": "intr alg dsgn&an"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 71.94,
+			"sections_year": 2010,
+			"sections_title": "comp hard&os"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 76.06,
+			"sections_year": 2010,
+			"sections_title": "model comptn"
+		},
+		{
+			"sections_dept": "phar",
+			"sections_avg": 93,
+			"sections_year": 2011,
+			"sections_title": "seminar"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 72.53,
+			"sections_year": 2011,
+			"sections_title": "intr alg dsgn&an"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 73.83,
+			"sections_year": 2011,
+			"sections_title": "comp hard&os"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 73.09,
+			"sections_year": 2011,
+			"sections_title": "comp hard&os"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 75.34,
+			"sections_year": 2011,
+			"sections_title": "model comptn"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 70.92,
+			"sections_year": 2012,
+			"sections_title": "comp hard&os"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 74.26,
+			"sections_year": 2012,
+			"sections_title": "model comptn"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 73.36,
+			"sections_year": 2012,
+			"sections_title": "model comptn"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 74.29,
+			"sections_year": 2012,
+			"sections_title": "model comptn"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 71.24,
+			"sections_year": 2013,
+			"sections_title": "intr alg dsgn&an"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 73.49,
+			"sections_year": 2013,
+			"sections_title": "model comptn"
+		},
+		{
+			"sections_dept": "phar",
+			"sections_avg": 94.54,
+			"sections_year": 2014,
+			"sections_title": "admn of injectns"
+		},
+		{
+			"sections_dept": "phar",
+			"sections_avg": 95.07,
+			"sections_year": 2014,
+			"sections_title": "admn of injectns"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 71.28,
+			"sections_year": 2014,
+			"sections_title": "intr alg dsgn&an"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 71.62,
+			"sections_year": 2014,
+			"sections_title": "comp hard&os"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 83.41,
+			"sections_year": 2014,
+			"sections_title": "model comptn"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 74.04,
+			"sections_year": 2014,
+			"sections_title": "model comptn"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 73.62,
+			"sections_year": 2015,
+			"sections_title": "comp hard&os"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 71.45,
+			"sections_year": 2015,
+			"sections_title": "basics comp syst"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 79,
+			"sections_year": 2015,
+			"sections_title": "model comptn"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 73.31,
+			"sections_year": 2015,
+			"sections_title": "model comptn"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 76.65,
+			"sections_year": 2015,
+			"sections_title": "model comptn"
+		}
+	]
+}

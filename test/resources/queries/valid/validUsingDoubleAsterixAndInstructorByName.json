@@ -1,0 +1,181 @@
+{
+	"title": "valid using double asterix and instructor by name",
+	"input": {
+		"WHERE": {
+			"IS": {
+				"sections_instructor": "*patrice*"
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_dept",
+				"sections_avg",
+				"sections_instructor"
+			],
+			"ORDER": "sections_avg"
+		}
+	},
+	"errorExpected": false,
+	"expected": [
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 66.34,
+			"sections_instructor": "belleville, patrice"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 67.16,
+			"sections_instructor": "belleville, patrice"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 68.22,
+			"sections_instructor": "belleville, patrice"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 68.94,
+			"sections_instructor": "belleville, patrice"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 69.4,
+			"sections_instructor": "belleville, patrice"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 69.95,
+			"sections_instructor": "belleville, patrice"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 70.92,
+			"sections_instructor": "belleville, patrice"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 70.95,
+			"sections_instructor": "belleville, patrice"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 71.24,
+			"sections_instructor": "belleville, patrice"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 71.28,
+			"sections_instructor": "belleville, patrice"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 71.45,
+			"sections_instructor": "belleville, patrice"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 71.62,
+			"sections_instructor": "belleville, patrice"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 71.94,
+			"sections_instructor": "belleville, patrice"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 72.19,
+			"sections_instructor": "belleville, patrice"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 72.53,
+			"sections_instructor": "belleville, patrice"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 73.09,
+			"sections_instructor": "belleville, patrice"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 73.31,
+			"sections_instructor": "belleville, patrice"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 73.36,
+			"sections_instructor": "belleville, patrice"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 73.49,
+			"sections_instructor": "belleville, patrice"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 73.62,
+			"sections_instructor": "belleville, patrice"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 73.83,
+			"sections_instructor": "belleville, patrice"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 74.04,
+			"sections_instructor": "belleville, patrice"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 74.06,
+			"sections_instructor": "belleville, patrice"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 74.26,
+			"sections_instructor": "belleville, patrice"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 74.29,
+			"sections_instructor": "belleville, patrice"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 75.34,
+			"sections_instructor": "belleville, patrice"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 76.06,
+			"sections_instructor": "belleville, patrice"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 76.65,
+			"sections_instructor": "belleville, patrice"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 79,
+			"sections_instructor": "belleville, patrice"
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_avg": 83.41,
+			"sections_instructor": "belleville, patrice"
+		},
+		{
+			"sections_dept": "midw",
+			"sections_avg": 85.9,
+			"sections_instructor": "latka, patrice"
+		},
+		{
+			"sections_dept": "midw",
+			"sections_avg": 86,
+			"sections_instructor": "latka, patrice"
+		}
+	]
+}
