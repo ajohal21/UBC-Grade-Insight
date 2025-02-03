@@ -49,6 +49,7 @@ describe("InsightFacade", function () {
 	describe("AddDataset", function () {
 		beforeEach(async function () {
 			facade = new InsightFacade();
+			await clearDisk();
 		});
 
 		afterEach(async function () {
@@ -173,6 +174,7 @@ describe("InsightFacade", function () {
 	describe("RemoveDataset", function () {
 		beforeEach(async function () {
 			facade = new InsightFacade();
+			await clearDisk();
 		});
 
 		afterEach(async function () {
