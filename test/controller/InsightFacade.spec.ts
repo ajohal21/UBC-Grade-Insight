@@ -35,12 +35,15 @@ describe("InsightFacade", function () {
 	//Zip with courses but each course is empty
 	let badJSON: string;
 
+	let course: string;
+
 	before(async function () {
 		sections = await getContentFromArchives("pair.zip");
 		notCourses = await getContentFromArchives("NoCoursesRoot.zip");
 		noContent = await getContentFromArchives("NoContent.zip");
 		badJSON = await getContentFromArchives("badJSON.zip");
 		//notAZip = await getContentFromArchives("notAZip.zip");
+		course = await getContentFromArchives("course.zip");
 	});
 
 	describe("AddDataset", function () {
@@ -77,7 +80,7 @@ describe("InsightFacade", function () {
 		});
 
 		it("should successfully add a dataset", async function () {
-			const result = await facade.addDataset("aman", sections, InsightDatasetKind.Sections);
+			const result = await facade.addDataset("aman", course, InsightDatasetKind.Sections);
 			return expect(result).to.have.members(["aman"]);
 		});
 
