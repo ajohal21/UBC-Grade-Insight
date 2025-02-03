@@ -40,8 +40,8 @@ export default class InsightFacade implements IInsightFacade {
 			this.validZip(zipResult);
 
 			const filePromises: Promise<void>[] = [];
-			zip.forEach((path, file) => {
-				if (!file.dir && path.startsWith("courses/")) {
+			zip.forEach((local, file) => {
+				if (!file.dir && local.startsWith("courses/")) {
 					//process data into sections
 					filePromises.push(this.processJsonData(file));
 				}
