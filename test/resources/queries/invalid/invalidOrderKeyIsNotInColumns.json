@@ -1,0 +1,28 @@
+{
+	"title": "invalid order key is not in columns",
+	"input": {
+		"WHERE": {
+			"AND": [
+				{
+					"GT": {
+						"sections_avg": 90
+					}
+				},
+				{
+					"IS": {
+						"sections_dept": "cpsc"
+					}
+				}
+			]
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_dept",
+				"sections_avg"
+			],
+			"ORDER": "sections_pass"
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}

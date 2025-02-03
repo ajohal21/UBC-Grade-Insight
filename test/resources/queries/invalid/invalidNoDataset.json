@@ -1,0 +1,27 @@
+{
+	"title": "invalid no dataset",
+	"input": {
+		"WHERE": {
+			"GT": {
+				"sections_avg": 97
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"section_dept",
+				"sections_uuid",
+				"sections_id",
+				"sections_title",
+				"sections_instructor",
+				"sections_year",
+				"sections_pass",
+				"sections_fail",
+				"sections_audit",
+				"sections_avg"
+			],
+			"ORDER": "sections_avg"
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}
