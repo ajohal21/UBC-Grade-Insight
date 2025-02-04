@@ -1,8 +1,9 @@
 import { IInsightFacade, InsightDataset, InsightDatasetKind, InsightError, InsightResult } from "./IInsightFacade";
-import { DatasetProcessor } from "/Users/aman/Documents/2025 Term 2/project_team180/src/controller/DatasetProcessor";
+import { DatasetProcessor } from "./DatasetProcessor";
 import JSZip from "jszip";
 import { Section } from "./types/Section";
 import { Dataset } from "./types/Dataset";
+import { QueryEngine } from "./QueryEngine";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -12,6 +13,7 @@ import { Dataset } from "./types/Dataset";
 export default class InsightFacade implements IInsightFacade {
 	private datasets: any[] = []; // Using a simple object to store datasets for now
 	private processor = new DatasetProcessor("data");
+	private queryEngine: QueryEngine = new QueryEngine();
 	private sectionDatasetArray: any[] = [];
 
 	public async addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
@@ -106,8 +108,10 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public async performQuery(query: unknown): Promise<InsightResult[]> {
-		// TODO: Remove this once you implement the methods!
-		throw new Error(`InsightFacadeImpl::performQuery() is unimplemented! - query=${query};`);
+		if (typeof query !== "object" || query === null) {
+			throw new InsightError("Query must be an object.");
+		}
+		return await this.queryEngine.handleQuery(query, this.processor);
 	}
 
 	public async listDatasets(): Promise<InsightDataset[]> {
