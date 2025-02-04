@@ -34,6 +34,7 @@ export default class InsightFacade implements IInsightFacade {
 		}
 
 		try {
+			this.sectionDatasetArray = [];
 			const zip = new JSZip();
 			const zipResult = await zip.loadAsync(content, { base64: true });
 
@@ -144,8 +145,21 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public async listDatasets(): Promise<InsightDataset[]> {
-		// TODO: Remove this once you implement the methods!
-		throw new Error(`InsightFacadeImpl::listDatasets is unimplemented!`);
+		let allData: Dataset[] = [];
+		const insightData: InsightDataset[] = [];
+
+		allData = await this.processor.getAllDatasets();
+
+		//loop through all Data and for each element in the array make InsightDataset and add to insightData array
+		for (const dataset of allData) {
+			insightData.push({
+				id: dataset.getId(),
+				kind: InsightDatasetKind.Sections,
+				numRows: dataset.getSections().length,
+			});
+		}
+
+		return insightData;
 	}
 
 	public validDatasetID(id: string): void {

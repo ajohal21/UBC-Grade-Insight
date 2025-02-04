@@ -55,4 +55,41 @@ export class DatasetProcessor {
 			return false;
 		}
 	}
+
+	public async getAllDatasets(): Promise<Dataset[]> {
+		const dataDirPath = path.join(__dirname, this.storagePath);
+		try {
+			const files = await fs.readdir(dataDirPath);
+
+			const datasetPromises = files
+				.filter((fileName) => fileName.endsWith(".json"))
+				.map(async (fileName) => {
+					const filePath = path.join(dataDirPath, fileName);
+					const data = await fs.readFile(filePath, "utf8");
+					const parsed = JSON.parse(data);
+
+					const id = parsed.id;
+					const sections = parsed.sections.map((s: any) => {
+						const uuid = s.uuid;
+						//const id = s.id;
+						const title = s.title;
+						const instructor = s.instructor;
+						const dept = s.dept;
+						const year = s.year;
+						const avg = s.avg;
+						const pass = s.pass;
+						const fail = s.fail;
+						const audit = s.audit;
+
+						return new Section(uuid, id, title, instructor, dept, year, avg, pass, fail, audit);
+					});
+
+					return new Dataset(id, sections);
+				});
+
+			return Promise.all(datasetPromises); // Wait for all datasets to be loaded
+		} catch (error) {
+			throw new Error(`Failed to retrieve datasets: ${error}`);
+		}
+	}
 }
