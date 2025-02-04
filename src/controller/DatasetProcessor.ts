@@ -16,19 +16,19 @@ export class DatasetProcessor {
 	 * @param datasetId - The ID of the dataset to load.
 	 * @returns A promise resolving to a Dataset object or null if not found.
 	 */
-	public async loadFromDisk(datasetId: string): Promise<Dataset | null> {
-		const filePath = path.join(this.storagePath, `${datasetId}.json`);
-		try {
-			const data = await fs.readFile(filePath, "utf8");
-			const parsed = JSON.parse(data);
-			const sections = parsed.sections.map((s: any) => {
-				return new Section(s.uuid, s.id, s.title, s.instructor, s.dept, s.year, s.avg, s.pass, s.fail, s.audit);
-			});
-			return new Dataset(datasetId, sections);
-		} catch (error) {
-			throw new Error(`Failed to load dataset ${datasetId}: ${error}`);
-		}
-	}
+	// public async loadFromDisk(datasetId: string): Promise<Dataset | null> {
+	// 	const filePath = path.join(this.storagePath, `${datasetId}.json`);
+	// 	try {
+	// 		const data = await fs.readFile(filePath, "utf8");
+	// 		const parsed = JSON.parse(data);
+	// 		const sections = parsed.sections.map((s: any) => {
+	// 			return new Section(s.uuid, s.id, s.title, s.instructor, s.dept, s.year, s.avg, s.pass, s.fail, s.audit);
+	// 		});
+	// 		return new Dataset(datasetId, sections);
+	// 	} catch (error) {
+	// 		throw new Error(`Failed to load dataset ${datasetId}: ${error}`);
+	// 	}
+	// }
 
 	/**
 	 * Saves a dataset to disk as a JSON file.
