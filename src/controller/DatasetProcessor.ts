@@ -1,4 +1,4 @@
-import { promises as fs } from "fs"; // For reading/writing files asynchronously
+import fs from "fs-extra";
 import path from "path"; // For handling file paths
 import { Dataset } from "./types/Dataset";
 import { Section } from "./types/Section";
@@ -36,12 +36,23 @@ export class DatasetProcessor {
 	 * @returns A promise resolving when the operation is complete.
 	 */
 	public async saveToDisk(dataset: Dataset): Promise<void> {
-		const filePath = path.join(this.storagePath, `${dataset.getId()}.json`);
+		const filePath = path.join(__dirname, this.storagePath, `${dataset.getId()}.json`);
 		try {
 			const jsonData = JSON.stringify(dataset, null, 2);
+			await fs.ensureDir(path.dirname(filePath));
 			await fs.writeFile(filePath, jsonData, "utf8");
 		} catch (error) {
 			throw new Error(`Error saving dataset ${dataset.getId()}: ${error}`);
+		}
+	}
+
+	public async doesDatasetExist(id: string): Promise<boolean> {
+		const filePath = path.join(__dirname, this.storagePath, `${id}.json`);
+		try {
+			await fs.access(filePath);
+			return true;
+		} catch {
+			return false;
 		}
 	}
 }

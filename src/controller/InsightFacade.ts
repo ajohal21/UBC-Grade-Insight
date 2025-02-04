@@ -1,8 +1,17 @@
-import { IInsightFacade, InsightDataset, InsightDatasetKind, InsightError, InsightResult } from "./IInsightFacade";
-import { DatasetProcessor } from "/Users/aman/Documents/2025 Term 2/project_team180/src/controller/DatasetProcessor";
+import {
+	IInsightFacade,
+	InsightDataset,
+	InsightDatasetKind,
+	InsightError,
+	InsightResult,
+	NotFoundError,
+} from "./IInsightFacade";
+import { DatasetProcessor } from "./DatasetProcessor";
 import JSZip from "jszip";
 import { Section } from "./types/Section";
 import { Dataset } from "./types/Dataset";
+import fs from "fs-extra";
+import path from "path";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -11,14 +20,17 @@ import { Dataset } from "./types/Dataset";
  */
 export default class InsightFacade implements IInsightFacade {
 	private datasets: any[] = []; // Using a simple object to store datasets for now
-	private processor = new DatasetProcessor("data");
+	private processor = new DatasetProcessor("../../data/");
 	private sectionDatasetArray: any[] = [];
 
 	public async addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
 		this.validDatasetID(id);
 
-		if (this.datasets.includes(id)) {
-			throw new InsightError("Dataset with this ID already exists.");
+		//call load to see if the ID is present
+		//is it better to load All or load the specific ID...
+
+		if (await this.processor.doesDatasetExist(id)) {
+			throw new InsightError("dataset with id already exists");
 		}
 
 		try {
@@ -28,8 +40,8 @@ export default class InsightFacade implements IInsightFacade {
 			this.validZip(zipResult);
 
 			const filePromises: Promise<void>[] = [];
-			zip.forEach((path, file) => {
-				if (!file.dir && path.startsWith("courses/")) {
+			zip.forEach((local, file) => {
+				if (!file.dir && local.startsWith("courses/")) {
 					//process data into sections
 					filePromises.push(this.processJsonData(file));
 				}
@@ -101,8 +113,29 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public async removeDataset(id: string): Promise<string> {
-		// TODO: Remove this once you implement the methods!
-		throw new Error(`InsightFacadeImpl::removeDataset() is unimplemented! - id=${id};`);
+		// 1. Validate the ID
+		this.validDatasetID(id);
+
+		// 2. Check if the dataset exists
+		if (!(await this.processor.doesDatasetExist(id))) {
+			throw new NotFoundError(`Dataset with ID ${id} does not exist`);
+		}
+
+		try {
+			// 3. Remove from memory
+
+			// 4. Remove from disk (cache)
+			const filePath = path.join(__dirname, "../../data", `${id}.json`);
+			await fs.remove(filePath); // Use fs.remove to delete the file
+
+			const index = this.datasets.indexOf(id);
+			this.datasets.splice(index, 1);
+
+			return Promise.resolve(id); // Return the removed ID
+		} catch (error) {
+			// Handle potential errors during file removal
+			throw new InsightError(`Failed to remove dataset ${id}: ${error}`);
+		}
 	}
 
 	public async performQuery(query: unknown): Promise<InsightResult[]> {
