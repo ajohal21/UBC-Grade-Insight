@@ -158,7 +158,6 @@ export default class InsightFacade implements IInsightFacade {
 				numRows: dataset.getSections().length,
 			});
 		}
-
 		return insightData;
 	}
 
