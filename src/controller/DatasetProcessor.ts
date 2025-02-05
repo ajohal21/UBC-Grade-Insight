@@ -26,9 +26,20 @@ export class DatasetProcessor {
 
 				try {
 					const parsed = JSON.parse(data);
-					const sections = parsed.sections.map(
-						(s: any) => new Section(s.uuid, s.id, s.title, s.instructor, s.dept, s.year, s.avg, s.pass, s.fail, s.audit)
-					);
+					const sections = parsed.sections.map((s: any) => {
+						const uuid = s.uuid;
+						const id = s.id;
+						const title = s.title;
+						const instructor = s.instructor;
+						const dept = s.dept;
+						const year = s.year;
+						const avg = s.avg;
+						const pass = s.pass;
+						const fail = s.fail;
+						const audit = s.audit;
+
+						return new Section(uuid, id, title, instructor, dept, year, avg, pass, fail, audit);
+					});
 					resolve(new Dataset(datasetId, sections));
 				} catch {
 					reject(new Error(`Failed to parse dataset.`));
