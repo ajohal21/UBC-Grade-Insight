@@ -2,7 +2,7 @@ import { Dataset } from "./types/Dataset";
 import { DatasetProcessor } from "./DatasetProcessor";
 import { Section } from "./types/Section";
 import { Query } from "./types/Query";
-import {InsightError, InsightResult, ResultTooLargeError} from "./IInsightFacade";
+import { InsightError, InsightResult, ResultTooLargeError } from "./IInsightFacade";
 
 export class QueryEngine {
 	private limit: number = 5000;
