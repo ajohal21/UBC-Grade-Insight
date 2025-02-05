@@ -16,7 +16,7 @@ export class DatasetProcessor {
 	 * @returns A promise resolving to a Dataset object or null if not found.
 	 */
 	public async loadFromDisk(datasetId: string): Promise<Dataset | null> {
-		const filePath = path.join(this.storagePath, `${datasetId}.json`);
+		const filePath = path.join(__dirname, this.storagePath, `${datasetId}.json`);
 		return new Promise((resolve, reject) => {
 			fs.readFile(filePath, "utf8", (err, data) => {
 				if (err) {
