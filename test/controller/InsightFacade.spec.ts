@@ -49,6 +49,7 @@ describe("InsightFacade", function () {
 	describe("AddDataset", function () {
 		beforeEach(async function () {
 			facade = new InsightFacade();
+			await clearDisk();
 		});
 
 		afterEach(async function () {
@@ -173,6 +174,7 @@ describe("InsightFacade", function () {
 	describe("RemoveDataset", function () {
 		beforeEach(async function () {
 			facade = new InsightFacade();
+			await clearDisk();
 		});
 
 		afterEach(async function () {
@@ -266,6 +268,17 @@ describe("InsightFacade", function () {
 			const result = await facade.listDatasets();
 			//expect(result).to.be.an("array");
 			expect(result).to.deep.equal([{ id: "aman", kind: InsightDatasetKind.Sections, numRows: 64612 }]);
+		});
+
+		it("should list dataset as an array with 2 datasets", async function () {
+			await facade.addDataset("aman", sections, InsightDatasetKind.Sections);
+			await facade.addDataset("kylee", sections, InsightDatasetKind.Sections);
+			const result = await facade.listDatasets();
+			//expect(result).to.be.an("array");
+			expect(result).to.deep.equal([
+				{ id: "aman", kind: InsightDatasetKind.Sections, numRows: 64612 },
+				{ id: "kylee", kind: InsightDatasetKind.Sections, numRows: 64612 },
+			]);
 		});
 	});
 

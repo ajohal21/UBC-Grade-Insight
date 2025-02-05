@@ -1,12 +1,15 @@
-import { Section } from "./Section";
+import {Section} from "./Section";
+import {InsightDatasetKind} from "../IInsightFacade";
 
 export class Dataset {
 	private readonly id: string;
 	private readonly sections: Section[];
+	private readonly kind: InsightDatasetKind;
 
 	constructor(id: string, sections: Section[] = []) {
 		this.id = id;
 		this.sections = sections;
+		this.kind = InsightDatasetKind.Sections;
 	}
 
 	public getId(): string {
