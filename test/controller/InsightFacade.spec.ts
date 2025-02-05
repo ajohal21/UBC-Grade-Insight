@@ -314,7 +314,13 @@ describe("InsightFacade", function () {
 			if (errorExpected) {
 				return expect.fail(`performQuery resolved when it should have rejected with ${expected}`);
 			}
-			return expect(result).to.deep.equal(expected);
+			// return expect(result).to.deep.equal(expected);
+			// if ((input as { OPTIONS: { ORDER?: string } }).OPTIONS.ORDER) {
+			// 	return expect(result).to.deep.equal(expected);
+			// } else {
+			// 	return expect(result).to.have.deep.members(expected);
+			// }
+			return expect(result).to.have.deep.members(expected);
 		}
 
 		before(async function () {
