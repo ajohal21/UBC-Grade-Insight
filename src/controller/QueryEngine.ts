@@ -2,9 +2,11 @@ import { Dataset } from "./types/Dataset";
 import { DatasetProcessor } from "./DatasetProcessor";
 import { Section } from "./types/Section";
 import { Query } from "./types/Query";
-import { InsightError, InsightResult } from "./IInsightFacade";
+import {InsightError, InsightResult, ResultTooLargeError} from "./IInsightFacade";
 
 export class QueryEngine {
+	private limit: number = 5000;
+
 	/**
 	 * TODO.
 	 */
@@ -26,7 +28,7 @@ export class QueryEngine {
 		const fieldName = key.split("_")[1];
 
 		if (!fieldMap[fieldName]) {
-			throw new Error(`Column '${key}' not found in section.`);
+			throw new InsightError(`Column '${key}' not found in section.`);
 		}
 
 		return fieldMap[fieldName](section);
@@ -106,21 +108,21 @@ export class QueryEngine {
 	/**
 	 * Handles GT, LT, and EQ comparisons.
 	 */
-	private handleComparator(operator: "GT" | "LT" | "EQ", condition: Record<string, number>, section: Section): boolean {
+	private handleComparator(operator: "GT" | "LT" | "EQ", condition: Record<string, any>, section: Section): boolean {
 		const datasetKey = Object.keys(condition)[0]; // "sections_avg"
 		const column = datasetKey.split("_")[1]; // Extract "avg"
-		const value = condition[column]; // the value
+		const value = condition[datasetKey]; // the value
 
 		// check type is numeric, else throw Insight Error
 		if (typeof value !== "number") {
 			throw new InsightError(`Invalid query: '${column}' must be a numeric value.`);
 		}
 
-		// Get the actual value from Section
-		const sectionValue = this.getSectionValue(section, column);
+		// Get the actual value from this Section
+		const sectionValue = this.getSectionValue(section, datasetKey);
 
 		if (typeof sectionValue !== "number") {
-			throw new InsightError(`Invalid query: '${column}' must be a numeric value.`);
+			throw new InsightError(`Invalid query: '${column}' must be a numeric field in the dataset.`);
 		}
 
 		switch (operator) {
@@ -137,7 +139,10 @@ export class QueryEngine {
 	 * Recursively evaluates a WHERE condition on a section.
 	 */
 	private evaluateCondition(filter: Record<string, any>, section: Section): boolean {
+		// get the key (OR
+		// i.e., OR [{"GT": {"sections_avg": 97}},{"LT": {"sections_pass": 50}}]
 		const key = Object.keys(filter)[0];
+
 		switch (key) {
 			case "AND":
 				return this.handleAND(filter.AND, section);
@@ -171,7 +176,20 @@ export class QueryEngine {
 	 * Handle the OPTIONS section.
 	 */
 	public handleOptions(options: Record<string, any>, sections: Section[]): InsightResult[] {
-		return [];
+		if (sections.length > this.limit) {
+			throw new ResultTooLargeError(`Query result too large.`);
+		}
+
+		const columns: string[] = options.COLUMNS ?? [];
+
+		// Transform each section into an InsightResult object
+		return sections.map((section) => {
+			const result: InsightResult = {};
+			for (const column of columns) {
+				result[column] = this.getSectionValue(section, column);
+			}
+			return result;
+		});
 	}
 
 	/**
@@ -190,7 +208,7 @@ export class QueryEngine {
 
 		const dataset: Dataset | null = await dp.loadFromDisk(datasetId);
 		if (!dataset) {
-			throw new Error(`Dataset with ID '${datasetId}' not found.`);
+			throw new InsightError(`Dataset with ID '${datasetId}' not found.`);
 		}
 
 		const queriedSections: Section[] = this.handleWhere(query.WHERE ?? {}, dataset);
