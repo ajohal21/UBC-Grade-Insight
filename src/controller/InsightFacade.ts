@@ -10,6 +10,7 @@ import { DatasetProcessor } from "./DatasetProcessor";
 import JSZip from "jszip";
 import { Section } from "./types/Section";
 import { Dataset } from "./types/Dataset";
+import { QueryEngine } from "./QueryEngine";
 import fs from "fs-extra";
 import path from "path";
 
@@ -20,6 +21,7 @@ import path from "path";
  */
 export default class InsightFacade implements IInsightFacade {
 	private datasets: any[] = []; // Using a simple object to store datasets for now
+	private queryEngine: QueryEngine = new QueryEngine();
 	private processor = new DatasetProcessor("../../data/");
 	private sectionDatasetArray: any[] = [];
 
@@ -140,8 +142,10 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public async performQuery(query: unknown): Promise<InsightResult[]> {
-		// TODO: Remove this once you implement the methods!
-		throw new Error(`InsightFacadeImpl::performQuery() is unimplemented! - query=${query};`);
+		if (typeof query !== "object" || query === null) {
+			throw new InsightError("Query must be an object.");
+		}
+		return await this.queryEngine.handleQuery(query, this.processor);
 	}
 
 	public async listDatasets(): Promise<InsightDataset[]> {

@@ -2,7 +2,6 @@ import fs from "fs-extra";
 import path from "path"; // For handling file paths
 import { Dataset } from "./types/Dataset";
 import { Section } from "./types/Section";
-//import { InsightError } from "./IInsightFacade";
 
 export class DatasetProcessor {
 	private storagePath: string;
@@ -16,19 +15,27 @@ export class DatasetProcessor {
 	 * @param datasetId - The ID of the dataset to load.
 	 * @returns A promise resolving to a Dataset object or null if not found.
 	 */
-	// public async loadFromDisk(datasetId: string): Promise<Dataset | null> {
-	// 	const filePath = path.join(this.storagePath, `${datasetId}.json`);
-	// 	try {
-	// 		const data = await fs.readFile(filePath, "utf8");
-	// 		const parsed = JSON.parse(data);
-	// 		const sections = parsed.sections.map((s: any) => {
-	// 			return new Section(s.uuid, s.id, s.title, s.instructor, s.dept, s.year, s.avg, s.pass, s.fail, s.audit);
-	// 		});
-	// 		return new Dataset(datasetId, sections);
-	// 	} catch (error) {
-	// 		throw new Error(`Failed to load dataset ${datasetId}: ${error}`);
-	// 	}
-	// }
+	public async loadFromDisk(datasetId: string): Promise<Dataset | null> {
+		const filePath = path.join(__dirname, this.storagePath, `${datasetId}.json`);
+		return new Promise((resolve, reject) => {
+			fs.readFile(filePath, "utf8", (err, data) => {
+				if (err) {
+					reject(new Error(`Failed to load dataset ${datasetId}: ${err.message}`));
+					return;
+				}
+
+				try {
+					const parsed = JSON.parse(data);
+					const sections = parsed.sections.map(
+						(s: any) => new Section(s.uuid, s.id, s.title, s.instructor, s.dept, s.year, s.avg, s.pass, s.fail, s.audit)
+					);
+					resolve(new Dataset(datasetId, sections));
+				} catch {
+					reject(new Error(`Failed to parse dataset.`));
+				}
+			});
+		});
+	}
 
 	/**
 	 * Saves a dataset to disk as a JSON file.
