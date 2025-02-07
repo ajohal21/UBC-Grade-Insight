@@ -120,21 +120,16 @@ export class QueryEngine {
 		// Get the actual value from this Section
 		const sectionValue = this.getSectionValue(section, datasetKey);
 
+		if (operator !== "IS" && typeof sectionValue !== "number") {
+			throw new InsightError(`Invalid query: '${column}' must be a numeric field for '${operator}' operator.`);
+		}
+
 		switch (operator) {
 			case "GT":
-				if (typeof sectionValue !== "number") {
-					throw new InsightError(`Invalid query: '${column}' must be a numeric field for 'GT' operator.`);
-				}
 				return sectionValue > value;
 			case "LT":
-				if (typeof sectionValue !== "number") {
-					throw new InsightError(`Invalid query: '${column}' must be a numeric field for 'LT' operator.`);
-				}
 				return sectionValue < value;
 			case "EQ":
-				if (typeof sectionValue !== "number") {
-					throw new InsightError(`Invalid query: '${column}' must be a numeric field for 'EQ' operator.`);
-				}
 				return sectionValue === value;
 			case "IS":
 				if (typeof sectionValue !== "string" || typeof value !== "string") {
