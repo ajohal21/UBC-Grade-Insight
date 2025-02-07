@@ -92,15 +92,23 @@ export default class InsightFacade implements IInsightFacade {
 			const jsonContent = await file.async("text");
 			const parsedContent = JSON.parse(jsonContent);
 
+			const setYear = 1900;
 			//want to make an array of sections
 			for (const field of parsedContent.result) {
+				let year: number;
+				if (field.Section === "overall") {
+					year = setYear;
+				} else {
+					year = field.Year;
+				}
+
 				const section = new Section(
 					field.id.toString(),
 					field.Course,
 					field.Title,
 					field.Professor,
 					field.Subject,
-					field.Year,
+					+year,
 					field.Avg,
 					field.Pass,
 					field.Fail,

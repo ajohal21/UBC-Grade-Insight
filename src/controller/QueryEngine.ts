@@ -191,6 +191,9 @@ export class QueryEngine {
 	/**
 	 * Handle the OPTIONS section.
 	 */
+	/**
+	 * Handle the OPTIONS section.
+	 */
 	public handleOptions(options: Record<string, any>, sections: Section[]): InsightResult[] {
 		if (sections.length > this.limit) {
 			throw new ResultTooLargeError(`Query result too large.`);
@@ -198,33 +201,36 @@ export class QueryEngine {
 
 		const columns: string[] = options.COLUMNS ?? [];
 
-		// Validate ORDER  is in COLUMNS if it exists
+		// Validate ORDER in COLUMNS if it exists, and sort if so
 		if ("ORDER" in options) {
-			const order = options.ORDER;
-			if (!columns.includes(order)) {
-				throw new InsightError(`Invalid query: ORDER column '${order}' must be present in COLUMNS.`);
+			const orderColumnWithDataset = options.ORDER;
+			const orderColumn = options.ORDER.split("_")[1] as keyof Section;
+			if (!columns.includes(orderColumnWithDataset)) {
+				throw new InsightError(`Invalid query: ORDER column '${orderColumn}' must be present in COLUMNS.`);
 			}
+
+			sections.sort((a, b) => {
+				const valA = a[orderColumn] as any;
+				const valB = b[orderColumn] as any;
+
+				if (typeof valA === "number" && typeof valB === "number") {
+					return valA - valB; // Numeric sorting
+				} else if (typeof valA === "string" && typeof valB === "string") {
+					return valA.localeCompare(valB); // String sorting
+				} else {
+					return 0; // Keep order if types don't match
+				}
+			});
 		}
 
 		// Transform each section into an InsightResult object
-		const results = sections.map((section) => {
+		return sections.map((section) => {
 			const result: InsightResult = {};
 			for (const column of columns) {
 				result[column] = this.getSectionValue(section, column);
 			}
 			return result;
 		});
-
-		// Sort the results if ORDER is specified
-		if ("ORDER" in options) {
-			const order = options.ORDER;
-			results.sort((a, b) => {
-				if (a[order] < b[order]) return -1;
-				if (a[order] > b[order]) return 1;
-				return 0;
-			});
-		}
-		return results;
 	}
 
 	/**
