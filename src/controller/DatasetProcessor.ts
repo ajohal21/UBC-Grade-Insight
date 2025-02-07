@@ -111,4 +111,23 @@ export class DatasetProcessor {
 			throw new InsightError(`Failed to retrieve datasets: ${error}`);
 		}
 	}
+
+	public async getAllDatasetIds(): Promise<string[]> {
+		const dataDirPath = path.join(__dirname, this.storagePath);
+
+		try {
+			// Ensure the data directory exists
+			await fs.ensureDir(dataDirPath);
+
+			const files = await fs.readdir(dataDirPath);
+
+			const datasetIds = files
+				.filter((fileName) => fileName.endsWith(".json"))
+				.map((fileName) => fileName.replace(/\.json$/, ""));
+
+			return Promise.resolve(datasetIds);
+		} catch (error) {
+			throw new InsightError(`Failed to retrieve datasets: ${error}`);
+		}
+	}
 }
