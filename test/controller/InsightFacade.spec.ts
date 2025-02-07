@@ -48,8 +48,8 @@ describe("InsightFacade", function () {
 
 	describe("AddDataset", function () {
 		beforeEach(async function () {
-			facade = new InsightFacade();
 			await clearDisk();
+			facade = new InsightFacade();
 		});
 
 		afterEach(async function () {
@@ -83,6 +83,40 @@ describe("InsightFacade", function () {
 		it("should successfully add a dataset", async function () {
 			const result = await facade.addDataset("aman", course, InsightDatasetKind.Sections);
 			return expect(result).to.have.members(["aman"]);
+		});
+
+		it("should successfully add a dataset with multiple facades", async function () {
+			await facade.addDataset("aman", course, InsightDatasetKind.Sections);
+			const facade2: InsightFacade = new InsightFacade();
+			const result = await facade2.addDataset("kylee", course, InsightDatasetKind.Sections);
+			expect(result).to.have.deep.members(["aman", "kylee"]);
+		});
+
+		it("should successfully add a dataset with multiple facades remove one add", async function () {
+			await facade.addDataset("aman", course, InsightDatasetKind.Sections);
+			const facade2: InsightFacade = new InsightFacade();
+			await facade2.addDataset("kylee", course, InsightDatasetKind.Sections);
+
+			const facade3: InsightFacade = new InsightFacade();
+			await facade3.removeDataset("aman");
+			const result = await facade3.addDataset("coolguy", course, InsightDatasetKind.Sections);
+			expect(result).to.have.deep.members(["kylee", "coolguy"]);
+		});
+
+		it("should reject with a dataset ID that already exists from previous facade", async function () {
+			let err: any;
+			try {
+				await facade.addDataset("aman", sections, InsightDatasetKind.Sections);
+				await facade.addDataset("kylee", sections, InsightDatasetKind.Sections);
+
+				const facade2: InsightFacade = new InsightFacade();
+				await facade2.addDataset("aman2", course, InsightDatasetKind.Sections);
+				await facade2.addDataset("kylee", course, InsightDatasetKind.Sections);
+				expect.fail("Expected Fail because ID already exists!");
+			} catch (error) {
+				err = error;
+			}
+			expect(err).to.be.instanceOf(InsightError);
 		});
 
 		it("should reject with a dataset ID that already exists aman", async function () {
@@ -263,6 +297,21 @@ describe("InsightFacade", function () {
 			await clearDisk();
 		});
 
+		it("should list dataset after add, new facade and second add", async function () {
+			await facade.addDataset("aman", sections, InsightDatasetKind.Sections);
+
+			await facade.addDataset("kylee", sections, InsightDatasetKind.Sections);
+			const facade2: InsightFacade = new InsightFacade();
+			await facade2.addDataset("aj21", sections, InsightDatasetKind.Sections);
+			await facade2.removeDataset("aman");
+
+			const facade3: InsightFacade = new InsightFacade();
+			await facade3.removeDataset("kylee");
+			const result = await facade3.listDatasets();
+			//expect(result).to.be.an("array");
+			expect(result).to.have.deep.members([{ id: "aj21", kind: InsightDatasetKind.Sections, numRows: 64612 }]);
+		});
+
 		it("should list dataset as an array", async function () {
 			await facade.addDataset("aman", sections, InsightDatasetKind.Sections);
 			const result = await facade.listDatasets();
@@ -275,7 +324,7 @@ describe("InsightFacade", function () {
 			await facade.addDataset("kylee", sections, InsightDatasetKind.Sections);
 			const result = await facade.listDatasets();
 			//expect(result).to.be.an("array");
-			expect(result).to.deep.equal([
+			expect(result).to.have.deep.members([
 				{ id: "aman", kind: InsightDatasetKind.Sections, numRows: 64612 },
 				{ id: "kylee", kind: InsightDatasetKind.Sections, numRows: 64612 },
 			]);

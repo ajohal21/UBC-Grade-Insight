@@ -56,9 +56,10 @@ export default class InsightFacade implements IInsightFacade {
 			const newDataset = new Dataset(id, this.sectionDatasetArray);
 			await this.processor.saveToDisk(newDataset);
 
-			this.datasets.push(id);
+			//this.datasets.push(id);
+			const diskDatasetID = await this.processor.getAllDatasetIds();
 
-			return Promise.resolve(this.datasets);
+			return Promise.resolve(diskDatasetID);
 		} catch (err) {
 			return Promise.reject(new InsightError(`invalid content: ${err}`));
 		}
