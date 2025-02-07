@@ -44,10 +44,7 @@ export class QueryEngine {
 	private extractDatasetIds(obj: any, datasetIds: Set<string>): void {
 		if (typeof obj !== "object" || obj === null) return;
 
-		const validKeys = new Set([
-			"avg", "pass", "fail", "audit", "year",
-			"dept", "instructor", "title", "uuid", "id"
-		]);
+		const validKeys = new Set(["avg", "pass", "fail", "audit", "year", "dept", "instructor", "title", "uuid", "id"]);
 
 		for (const key in obj) {
 			if (key.includes("_")) {
