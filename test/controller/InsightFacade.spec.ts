@@ -37,6 +37,10 @@ describe("InsightFacade", function () {
 
 	let course: string;
 
+	let invalidSection: string;
+
+	let onlySomeInvalid: string;
+
 	before(async function () {
 		sections = await getContentFromArchives("pair.zip");
 		notCourses = await getContentFromArchives("NoCoursesRoot.zip");
@@ -44,6 +48,8 @@ describe("InsightFacade", function () {
 		badJSON = await getContentFromArchives("badJSON.zip");
 		//notAZip = await getContentFromArchives("notAZip.zip");
 		course = await getContentFromArchives("course.zip");
+		invalidSection = await getContentFromArchives("invalidSection.zip");
+		onlySomeInvalid = await getContentFromArchives("onlySomeInvalidSections.zip");
 	});
 
 	describe("AddDataset", function () {
@@ -103,6 +109,44 @@ describe("InsightFacade", function () {
 			expect(result).to.have.deep.members(["kylee", "coolguy"]);
 		});
 
+		it("should successfully add a dataset with multiple facades", async function () {
+			await facade.addDataset("aman", course, InsightDatasetKind.Sections);
+			const facade2: InsightFacade = new InsightFacade();
+			await facade2.addDataset("kylee", course, InsightDatasetKind.Sections);
+
+			const facade3: InsightFacade = new InsightFacade();
+			const result = await facade3.addDataset("coolguy", course, InsightDatasetKind.Sections);
+			expect(result).to.have.deep.members(["kylee", "coolguy", "aman"]);
+		});
+
+		it("should successfully add a dataset with multiple facades but one of them is bad", async function () {
+			await facade.addDataset("aman", course, InsightDatasetKind.Sections);
+			const facade2: InsightFacade = new InsightFacade();
+			try {
+				await facade2.addDataset("", course, InsightDatasetKind.Sections);
+			} catch (e) {
+				e;
+			}
+
+			const facade3: InsightFacade = new InsightFacade();
+			const result = await facade3.addDataset("coolguy", course, InsightDatasetKind.Sections);
+			expect(result).to.have.deep.members(["coolguy", "aman"]);
+		});
+
+		it("should successfully add a dataset with multiple facades but one already exists", async function () {
+			await facade.addDataset("aman", course, InsightDatasetKind.Sections);
+			const facade2: InsightFacade = new InsightFacade();
+			try {
+				await facade2.addDataset("aman", course, InsightDatasetKind.Sections);
+			} catch (e) {
+				e;
+			}
+
+			const facade3: InsightFacade = new InsightFacade();
+			const result = await facade3.addDataset("coolguy", course, InsightDatasetKind.Sections);
+			expect(result).to.have.deep.members(["coolguy", "aman"]);
+		});
+
 		it("should reject with a dataset ID that already exists from previous facade", async function () {
 			let err: any;
 			try {
@@ -143,15 +187,15 @@ describe("InsightFacade", function () {
 		});
 
 		it("should successfully add multiple valid datasets", async function () {
-			const result = await facade.addDataset("aman", sections, InsightDatasetKind.Sections);
+			const result = await facade.addDataset("aman", course, InsightDatasetKind.Sections);
 			expect(result).to.have.members(["aman"]);
-			const result2 = await facade.addDataset("aman2", sections, InsightDatasetKind.Sections);
+			const result2 = await facade.addDataset("aman2", course, InsightDatasetKind.Sections);
 
 			expect(result2).to.have.members(["aman", "aman2"]);
 		});
 
 		it("should successfully add with ID that is any characters except underscore", async function () {
-			const result = await facade.addDataset("aman2133!?", sections, InsightDatasetKind.Sections);
+			const result = await facade.addDataset("aman2133!?", course, InsightDatasetKind.Sections);
 			expect(result).to.have.members(["aman2133!?"]);
 		});
 
@@ -197,6 +241,29 @@ describe("InsightFacade", function () {
 
 			try {
 				await facade.addDataset("aman", notAZip, InsightDatasetKind.Sections);
+				expect.fail("Expected Fail here!");
+			} catch (error) {
+				err = error;
+			}
+			expect(err).to.be.instanceOf(InsightError);
+		});
+		it("should reject with a zip file that has one section but that section isnt valid", async function () {
+			let err: any;
+
+			try {
+				await facade.addDataset("aman", invalidSection, InsightDatasetKind.Sections);
+				expect.fail("Expected Fail here!");
+			} catch (error) {
+				err = error;
+			}
+			expect(err).to.be.instanceOf(InsightError);
+		});
+
+		it("should reject a zip that has 1 course and som invalid", async function () {
+			let err: any;
+
+			try {
+				await facade.addDataset("aman", onlySomeInvalid, InsightDatasetKind.Sections);
 				expect.fail("Expected Fail here!");
 			} catch (error) {
 				err = error;
@@ -264,7 +331,7 @@ describe("InsightFacade", function () {
 		});
 
 		it("should successfully remove a dataset aman", async function () {
-			await facade.addDataset("aman", sections, InsightDatasetKind.Sections);
+			await facade.addDataset("aman", course, InsightDatasetKind.Sections);
 			const result = await facade.removeDataset("aman");
 			expect(result).to.equal("aman");
 		});
@@ -280,11 +347,20 @@ describe("InsightFacade", function () {
 		});
 
 		it("should successfully remove a dataset aman and then add a dataset to check members", async function () {
-			await facade.addDataset("aman", sections, InsightDatasetKind.Sections);
+			await facade.addDataset("aman", course, InsightDatasetKind.Sections);
 			await facade.removeDataset("aman");
 
-			const add2 = await facade.addDataset("secondAdd", sections, InsightDatasetKind.Sections);
+			const add2 = await facade.addDataset("secondAdd", course, InsightDatasetKind.Sections);
 			expect(add2).to.have.members(["secondAdd"]);
+		});
+
+		it("should successfully remove a dataset as a second facade", async function () {
+			await facade.addDataset("aman", sections, InsightDatasetKind.Sections);
+			await facade.addDataset("secondAdd", sections, InsightDatasetKind.Sections);
+
+			const facade2: InsightFacade = new InsightFacade();
+			const remove = await facade2.removeDataset("secondAdd");
+			expect(remove).to.equal("secondAdd");
 		});
 	});
 

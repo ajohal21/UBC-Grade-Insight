@@ -95,7 +95,7 @@ export default class InsightFacade implements IInsightFacade {
 			const parsedContent = JSON.parse(jsonContent);
 
 			const setYear = 1900;
-			//want to make an array of sections
+
 			for (const field of parsedContent.result) {
 				let year: number;
 				if (field.Section === "overall") {
@@ -104,24 +104,61 @@ export default class InsightFacade implements IInsightFacade {
 					year = field.Year;
 				}
 
-				const section = new Section(
-					field.id.toString(),
-					field.Course,
-					field.Title,
-					field.Professor,
-					field.Subject,
-					+year,
-					field.Avg,
-					field.Pass,
-					field.Fail,
-					field.Audit
-				);
-				this.sectionDatasetArray.push(section);
+				const result = this.processSection(field, year);
+
+				if (result instanceof InsightError) {
+					throw result; // Throw the InsightError if one was returned
+				} else if (result === null) {
+					// Should not happen with this implementation, but included for robustness
+					throw new InsightError("Unexpected error processing section.");
+				} else {
+					this.sectionDatasetArray.push(result); // result is the Section object
+				}
 			}
 
 			return parsedContent;
 		} catch (err) {
-			throw new InsightError(`cannot process file: ${err}`);
+			if (err instanceof InsightError) {
+				// Re-throw InsightErrors as they are
+				throw err;
+			} else {
+				throw new InsightError(`Error processing file: ${err}`); // Wrap other errors
+			}
+		}
+	}
+
+	private processSection(field: any, year: number): Section | InsightError | null {
+		if (
+			field.id === undefined ||
+			field.Course === undefined ||
+			field.Title === undefined ||
+			field.Professor === undefined ||
+			field.Subject === undefined ||
+			year === undefined ||
+			field.Avg === undefined ||
+			field.Pass === undefined ||
+			field.Fail === undefined ||
+			field.Audit === undefined
+		) {
+			return new InsightError(`Missing required field(s) in section: ${JSON.stringify(field)}`);
+		}
+
+		try {
+			const section = new Section(
+				field.id.toString(),
+				field.Course,
+				field.Title,
+				field.Professor,
+				field.Subject,
+				+year,
+				field.Avg,
+				field.Pass,
+				field.Fail,
+				field.Audit
+			);
+			return section;
+		} catch (e) {
+			return new InsightError(`Error creating section: ${e}`); // Wrap any section creation errors
 		}
 	}
 
