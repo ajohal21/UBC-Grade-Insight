@@ -57,7 +57,7 @@ export class DatasetProcessor {
 	 * @returns A promise resolving when the operation is complete.
 	 */
 	public async saveToDisk(dataset: Dataset): Promise<void> {
-		const fileID = this.encodeDatasetId(dataset.getId())
+		const fileID = this.encodeDatasetId(dataset.getId());
 		const filePath = path.join(__dirname, this.storagePath, `${fileID}.json`);
 		try {
 			const jsonData = JSON.stringify(dataset, null, 2);

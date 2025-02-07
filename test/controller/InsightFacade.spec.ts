@@ -52,7 +52,7 @@ describe("InsightFacade", function () {
 		course = await getContentFromArchives("course.zip");
 		invalidSection = await getContentFromArchives("invalidSection.zip");
 		noResultskey = await getContentFromArchives("noResultkey.zip");
-		jsonMissingComma = await getContentFromArchives("jsonMissingComma.zip")
+		jsonMissingComma = await getContentFromArchives("jsonMissingComma.zip");
 	});
 
 	describe("AddDataset", function () {
@@ -279,7 +279,6 @@ describe("InsightFacade", function () {
 			expect(err).to.be.instanceOf(InsightError);
 		});
 
-
 		it("should reject a course that no resutls key", async function () {
 			let err: any;
 
@@ -459,7 +458,6 @@ describe("InsightFacade", function () {
 					return expect(re).to.equal("id");
 				});
 		});
-
 	});
 
 	describe("ListDataset", function () {
@@ -516,7 +514,6 @@ describe("InsightFacade", function () {
 			//expect(result).to.be.an("array");
 			expect(result).to.deep.equal([]);
 		});
-
 
 		it("after remove crashes, return the empty listDataset", async function () {
 			try {

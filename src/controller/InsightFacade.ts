@@ -80,7 +80,6 @@ export default class InsightFacade implements IInsightFacade {
 				rootFolder.push(relativePath);
 			} else if (relativePath.startsWith("courses/")) {
 				jsonData.push(relativePath);
-
 			}
 		});
 
@@ -205,7 +204,7 @@ export default class InsightFacade implements IInsightFacade {
 
 		const currentData = await this.processor.getAllDatasetIds();
 
-		if(currentData.length < 1) {
+		if (currentData.length < 1) {
 			return insightData;
 		}
 
