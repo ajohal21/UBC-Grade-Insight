@@ -39,7 +39,9 @@ describe("InsightFacade", function () {
 
 	let invalidSection: string;
 
-	let onlySomeInvalid: string;
+	let noResultskey: string;
+
+	let jsonMissingComma: string;
 
 	before(async function () {
 		sections = await getContentFromArchives("pair.zip");
@@ -49,7 +51,8 @@ describe("InsightFacade", function () {
 		//notAZip = await getContentFromArchives("notAZip.zip");
 		course = await getContentFromArchives("course.zip");
 		invalidSection = await getContentFromArchives("invalidSection.zip");
-		onlySomeInvalid = await getContentFromArchives("onlySomeInvalidSections.zip");
+		noResultskey = await getContentFromArchives("noResultkey.zip");
+		jsonMissingComma = await getContentFromArchives("jsonMissingComma.zip");
 	});
 
 	describe("AddDataset", function () {
@@ -89,6 +92,23 @@ describe("InsightFacade", function () {
 		it("should successfully add a dataset", async function () {
 			const result = await facade.addDataset("aman", course, InsightDatasetKind.Sections);
 			return expect(result).to.have.members(["aman"]);
+		});
+
+		it("should successfully add a dataset with / in name", async function () {
+			const result = await facade.addDataset("/yay/", course, InsightDatasetKind.Sections);
+			return expect(result).to.have.members(["/yay/"]);
+		});
+
+		it("should reject with a dataset ID that already exists /", async function () {
+			let err: any;
+			try {
+				await facade.addDataset("/hello", sections, InsightDatasetKind.Sections);
+				await facade.addDataset("/hello", sections, InsightDatasetKind.Sections);
+				expect.fail("Expected Fail because ID already exists!");
+			} catch (error) {
+				err = error;
+			}
+			expect(err).to.be.instanceOf(InsightError);
 		});
 
 		it("should successfully add a dataset with multiple facades", async function () {
@@ -259,16 +279,51 @@ describe("InsightFacade", function () {
 			expect(err).to.be.instanceOf(InsightError);
 		});
 
-		it("should reject a zip that has 1 course and som invalid", async function () {
+		it("should reject a course that no resutls key", async function () {
 			let err: any;
 
 			try {
-				await facade.addDataset("aman", onlySomeInvalid, InsightDatasetKind.Sections);
+				await facade.addDataset("aman", noResultskey, InsightDatasetKind.Sections);
 				expect.fail("Expected Fail here!");
 			} catch (error) {
 				err = error;
 			}
 			expect(err).to.be.instanceOf(InsightError);
+		});
+
+		it("should reject a with a json that is missing a comma (invalid)", async function () {
+			let err: any;
+
+			try {
+				await facade.addDataset("aman", jsonMissingComma, InsightDatasetKind.Sections);
+				expect.fail("Expected Fail here!");
+			} catch (error) {
+				err = error;
+			}
+			expect(err).to.be.instanceOf(InsightError);
+		});
+
+		it("it should handling crashes on multiple adds", async function () {
+			// add id (resolve), add id (reject), add id2 (resolve)
+			try {
+				const result = await facade.addDataset("id", sections, InsightDatasetKind.Sections);
+				expect(result.length).to.equal(1);
+				expect(result).have.deep.members(["id"]);
+				facade = new InsightFacade();
+				await facade.addDataset("id", sections, InsightDatasetKind.Sections);
+				expect.fail();
+			} catch (err) {
+				expect(err).to.be.instanceof(InsightError);
+			}
+
+			try {
+				const res = await facade.addDataset("id2", sections, InsightDatasetKind.Sections);
+				expect(res).to.be.an.instanceof(Array);
+				expect(res).to.have.length(2);
+				expect(res).have.deep.members(["id", "id2"]);
+			} catch (err) {
+				expect(err).to.be.instanceOf(InsightError);
+			}
 		});
 	});
 
@@ -336,6 +391,12 @@ describe("InsightFacade", function () {
 			expect(result).to.equal("aman");
 		});
 
+		it("should successfully remove a dataset /", async function () {
+			await facade.addDataset("/ r", course, InsightDatasetKind.Sections);
+			const result = await facade.removeDataset("/ r");
+			expect(result).to.equal("/ r");
+		});
+
 		it("should successfully add 2 datasets and remove 2 a datasets", async function () {
 			await facade.addDataset("aman", sections, InsightDatasetKind.Sections);
 			await facade.addDataset("aman2", sections, InsightDatasetKind.Sections);
@@ -361,6 +422,41 @@ describe("InsightFacade", function () {
 			const facade2: InsightFacade = new InsightFacade();
 			const remove = await facade2.removeDataset("secondAdd");
 			expect(remove).to.equal("secondAdd");
+		});
+
+		it("remove dataset and add back without problem", async function () {
+			try {
+				const result = await facade.addDataset("id", sections, InsightDatasetKind.Sections);
+				expect(result.length).to.equal(1);
+				expect(result).have.deep.members(["id"]);
+				const res = await facade.removeDataset("id");
+				expect(res).to.equal("id");
+				const re = await facade.addDataset("id", sections, InsightDatasetKind.Sections);
+				expect(result.length).to.equal(1);
+				expect(re).have.deep.members(["id"]);
+			} catch (err) {
+				expect(err).to.be.instanceOf(InsightError);
+			}
+		});
+
+		it("after a rejected remove, the next remove resolves", async function () {
+			return facade
+				.addDataset("id", sections, InsightDatasetKind.Sections)
+				.then(async (result) => {
+					expect(result.length).to.equal(1);
+					expect(result).have.deep.members(["id"]);
+					return facade.removeDataset("id2");
+				})
+				.then((res) => {
+					return expect.fail("removed a not added id, shouldn't resolve");
+				})
+				.catch(async (err) => {
+					expect(err).to.be.instanceof(NotFoundError);
+					return facade.removeDataset("id");
+				})
+				.then((re) => {
+					return expect(re).to.equal("id");
+				});
 		});
 	});
 
@@ -395,6 +491,13 @@ describe("InsightFacade", function () {
 			expect(result).to.deep.equal([{ id: "aman", kind: InsightDatasetKind.Sections, numRows: 64612 }]);
 		});
 
+		it("should list dataset as an array with /", async function () {
+			await facade.addDataset("/hello", sections, InsightDatasetKind.Sections);
+			const result = await facade.listDatasets();
+			//expect(result).to.be.an("array");
+			expect(result).to.deep.equal([{ id: "/hello", kind: InsightDatasetKind.Sections, numRows: 64612 }]);
+		});
+
 		it("should list dataset as an array with 2 datasets", async function () {
 			await facade.addDataset("aman", sections, InsightDatasetKind.Sections);
 			await facade.addDataset("kylee", sections, InsightDatasetKind.Sections);
@@ -404,6 +507,27 @@ describe("InsightFacade", function () {
 				{ id: "aman", kind: InsightDatasetKind.Sections, numRows: 64612 },
 				{ id: "kylee", kind: InsightDatasetKind.Sections, numRows: 64612 },
 			]);
+		});
+
+		it("should list empty dataset", async function () {
+			const result = await facade.listDatasets();
+			//expect(result).to.be.an("array");
+			expect(result).to.deep.equal([]);
+		});
+
+		it("after remove crashes, return the empty listDataset", async function () {
+			try {
+				const result = await facade.addDataset("id", sections, InsightDatasetKind.Sections);
+				expect(result).to.be.an.instanceof(Array);
+				expect(result).to.have.length(1);
+				await facade.removeDataset("id");
+				facade = new InsightFacade();
+				const res = await facade.listDatasets();
+				expect(res).to.be.instanceof(Array);
+				expect(res.length).to.equal(0);
+			} catch (err) {
+				expect(err).to.be.instanceOf(InsightError);
+			}
 		});
 	});
 

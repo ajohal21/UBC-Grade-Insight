@@ -27,7 +27,6 @@ export default class InsightFacade implements IInsightFacade {
 
 	public async addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
 		this.validDatasetID(id);
-
 		//call load to see if the ID is present
 		//is it better to load All or load the specific ID...
 
@@ -93,6 +92,10 @@ export default class InsightFacade implements IInsightFacade {
 		try {
 			const jsonContent = await file.async("text");
 			const parsedContent = JSON.parse(jsonContent);
+
+			if (!parsedContent.hasOwnProperty("result") || !Array.isArray(parsedContent.result)) {
+				throw new InsightError(`Invalid JSON format in ${file.name}: Missing or invalid "result" key.`);
+			}
 
 			const setYear = 1900;
 
@@ -198,6 +201,12 @@ export default class InsightFacade implements IInsightFacade {
 	public async listDatasets(): Promise<InsightDataset[]> {
 		let allData: Dataset[] = [];
 		const insightData: InsightDataset[] = [];
+
+		const currentData = await this.processor.getAllDatasetIds();
+
+		if (currentData.length < 1) {
+			return insightData;
+		}
 
 		allData = await this.processor.getAllDatasets();
 
