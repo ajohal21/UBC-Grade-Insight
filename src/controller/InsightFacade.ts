@@ -57,6 +57,7 @@ export default class InsightFacade implements IInsightFacade {
 			await this.processor.saveToDisk(newDataset);
 
 			//this.datasets.push(id);
+			//now we just load the diskID after an add
 			const diskDatasetID = await this.processor.getAllDatasetIds();
 
 			return Promise.resolve(diskDatasetID);
