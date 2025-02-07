@@ -43,7 +43,7 @@ export class DatasetProcessor {
 					});
 					resolve(new Dataset(datasetId, sections));
 				} catch {
-					reject(new Error(`Failed to parse dataset.`));
+					reject(new InsightError(`Failed to parse dataset.`));
 				}
 			});
 		});
