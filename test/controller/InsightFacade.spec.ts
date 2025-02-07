@@ -315,12 +315,31 @@ describe("InsightFacade", function () {
 				return expect.fail(`performQuery resolved when it should have rejected with ${expected}`);
 			}
 			// return expect(result).to.deep.equal(expected);
-			// if ((input as { OPTIONS: { ORDER?: string } }).OPTIONS.ORDER) {
-			// 	return expect(result).to.deep.equal(expected);
-			// } else {
-			// 	return expect(result).to.have.deep.members(expected);
-			// }
-			return expect(result).to.have.deep.members(expected);
+			if ((input as { OPTIONS: { ORDER?: string } }).OPTIONS.ORDER) {
+				// return expect(result).to.deep.equal(expected);
+
+				const orderColumn = (input as { OPTIONS: { ORDER?: string } }).OPTIONS.ORDER as string;
+				let previousValue: any = null;
+
+				for (const resultItem of result) {
+					if (previousValue !== null && (resultItem as any)[orderColumn] < previousValue) {
+						return expect.fail(`ORDER key ${orderColumn} is not increasing`);
+					}
+
+					const matchingItem = expected.find((item: InsightResult) => {
+						return JSON.stringify(item) === JSON.stringify(resultItem);
+					});
+
+					if (!matchingItem) {
+						return expect.fail(`Result item ${JSON.stringify(resultItem)} not found in expected`);
+					}
+
+					previousValue = resultItem[orderColumn];
+				}
+				return expect(true).to.be.true;
+			} else {
+				return expect(result).to.have.deep.members(expected);
+			}
 		}
 
 		before(async function () {
