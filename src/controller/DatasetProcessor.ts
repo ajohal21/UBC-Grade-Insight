@@ -43,7 +43,7 @@ export class DatasetProcessor {
 					});
 					resolve(new Dataset(datasetId, sections));
 				} catch {
-					reject(new Error(`Failed to parse dataset.`));
+					reject(new InsightError(`Failed to parse dataset.`));
 				}
 			});
 		});
@@ -61,7 +61,7 @@ export class DatasetProcessor {
 			await fs.ensureDir(path.dirname(filePath));
 			await fs.writeFile(filePath, jsonData, "utf8");
 		} catch (error) {
-			throw new Error(`Error saving dataset ${dataset.getId()}: ${error}`);
+			throw new InsightError(`Error saving dataset ${dataset.getId()}: ${error}`);
 		}
 	}
 
@@ -108,7 +108,7 @@ export class DatasetProcessor {
 
 			return Promise.all(datasetPromises); // Wait for all datasets to be loaded
 		} catch (error) {
-			throw new Error(`Failed to retrieve datasets: ${error}`);
+			throw new InsightError(`Failed to retrieve datasets: ${error}`);
 		}
 	}
 }
