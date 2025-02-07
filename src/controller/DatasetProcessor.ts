@@ -17,11 +17,13 @@ export class DatasetProcessor {
 	 * @returns A promise resolving to a Dataset object or null if not found.
 	 */
 	public async loadFromDisk(datasetId: string): Promise<Dataset | null> {
-		const filePath = path.join(__dirname, this.storagePath, `${datasetId}.json`);
+		const fileID = this.encodeDatasetId(datasetId);
+
+		const filePath = path.join(__dirname, this.storagePath, `${fileID}.json`);
 		return new Promise((resolve, reject) => {
 			fs.readFile(filePath, "utf8", (err, data) => {
 				if (err) {
-					reject(new InsightError(`Failed to load dataset ${datasetId}: ${err.message}`));
+					reject(new InsightError(`Failed to load dataset ${fileID}: ${err.message}`));
 					return;
 				}
 
@@ -55,7 +57,8 @@ export class DatasetProcessor {
 	 * @returns A promise resolving when the operation is complete.
 	 */
 	public async saveToDisk(dataset: Dataset): Promise<void> {
-		const filePath = path.join(__dirname, this.storagePath, `${dataset.getId()}.json`);
+		const fileID = this.encodeDatasetId(dataset.getId())
+		const filePath = path.join(__dirname, this.storagePath, `${fileID}.json`);
 		try {
 			const jsonData = JSON.stringify(dataset, null, 2);
 			await fs.ensureDir(path.dirname(filePath));
@@ -66,7 +69,8 @@ export class DatasetProcessor {
 	}
 
 	public async doesDatasetExist(id: string): Promise<boolean> {
-		const filePath = path.join(__dirname, this.storagePath, `${id}.json`);
+		const fileID = this.encodeDatasetId(id);
+		const filePath = path.join(__dirname, this.storagePath, `${fileID}.json`);
 		try {
 			await fs.access(filePath);
 			return true;
@@ -123,11 +127,22 @@ export class DatasetProcessor {
 
 			const datasetIds = files
 				.filter((fileName) => fileName.endsWith(".json"))
-				.map((fileName) => fileName.replace(/\.json$/, ""));
+				.map((fileName) => {
+					const encodedId = fileName.replace(/\.json$/, "");
+					return this.decodeDatasetId(encodedId);
+				});
 
 			return Promise.resolve(datasetIds);
 		} catch (error) {
 			throw new InsightError(`Failed to retrieve datasets: ${error}`);
 		}
+	}
+
+	public encodeDatasetId(id: string): string {
+		return encodeURIComponent(id);
+	}
+
+	public decodeDatasetId(encodedId: string): string {
+		return decodeURIComponent(encodedId);
 	}
 }
