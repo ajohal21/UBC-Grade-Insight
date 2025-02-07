@@ -374,6 +374,22 @@ describe("InsightFacade", function () {
 		it("[valid/validDoubleNotNegatingThemselves.json] valid double not negating themselves", checkQuery);
 		it("[valid/validSortingWithStringTypeColumn.json] valid sorting with string type column", checkQuery);
 		it("[valid/validANDORGTLTEQISNOTWILDCARD.json] valid AND OR GT LT EQ IS NOT WILDCARD", checkQuery);
+		it("[valid/complex.json] SELECT dept, avg WHERE avg > 97 AND dept = adhe", checkQuery);
+		it("[valid/less_than.json] SELECT dept, avg WHERE avg < 50", checkQuery);
+		it("[valid/asterisk_right.json] SELECT dept, avg WHERE dept starts with mat AND avg > 97", checkQuery);
+		it("[valid/asterisk_left.json] SELECT dept, avg WHERE dept ends with se AND avg > 97", checkQuery);
+		it("[valid/asterisks.json] SELECT dept, avg WHERE avg > 97 AND dept contains s", checkQuery);
+		it("[valid/negation.json] SELECT dept, avg WHERE avg > 97 AND dept is not epse", checkQuery);
+		it("[valid/asterisk_right.json] valid asterisks right", checkQuery);
+		it("[valid/asterisk_left.json] valid asterisks left", checkQuery);
+		it("[valid/no_results.json] no results", checkQuery);
+		it("[valid/no_order.json] no order", checkQuery);
+		it("[valid/query_with_pass.json] query that uses pass", checkQuery);
+		it("[valid/query_with_uuid_and_title.json] query that uses uuid and title", checkQuery);
+		it("[valid/query_with_instructor.json] query that uses instructor", checkQuery);
+		it("[valid/query_with_and_nested_or.json] query that has an OR nested in a AND", checkQuery);
+		it("[valid/query_with_or_nested_and.json] query that has an AND nested in an OR", checkQuery);
+		it("[valid/all.json] query that has EVERYTHING", checkQuery);
 
 		//Invalid
 		it("[invalid/invalid.json] Query missing WHERE", checkQuery);
@@ -390,5 +406,17 @@ describe("InsightFacade", function () {
 		it("[invalid/invalidUsingISForANumber.json] invalid using IS for a number", checkQuery);
 		it("[invalid/invalidKeyInColumnsClause.json] invalid key in columns clause", checkQuery);
 		it("[invalid/invalidKeyInWhereClause.json] invalid key in where clause", checkQuery);
+		it("[invalid/invalid.json] query missing WHERE", checkQuery);
+		it("[invalid/invalid_too_large.json] query result is too large", checkQuery);
+		it("[invalid/invalid_asterisks.json] query has invalid asterisks", checkQuery);
+		it("[invalid/invalid_dataset_not_present.json] Query references a dataset not present", checkQuery);
+		it("[invalid/invalid_missing_columns.json] query missing COLUMNS", checkQuery);
+		it("[invalid/invalid_equal_string.json] query uses equal for string", checkQuery);
+		it("[invalid/invalid_is_number.json] query uses is with a number", checkQuery);
+		it("[invalid/invalid_multiple_datasets.json] query uses is with a number", checkQuery);
+		it("[invalid/invalid_missing_options.json] query is missing options", checkQuery);
+		it("[invalid/invalid_where_key.json] query uses invalid where key", checkQuery);
+		it("[invalid/invalid_column_key.json] query uses invalid column key", checkQuery);
+		it("[invalid/invalid_order_key.json] query uses invalid order key", checkQuery);
 	});
 });

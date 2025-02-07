@@ -8,7 +8,7 @@ export class QueryEngine {
 	private limit: number = 5000;
 
 	/**
-	 * TODO.
+	 * Maps to get a given Section's key
 	 */
 	private getSectionValue(section: Section, key: string): string | number {
 		const fieldMap: Record<string, (s: Section) => string | number> = {
@@ -44,10 +44,20 @@ export class QueryEngine {
 	private extractDatasetIds(obj: any, datasetIds: Set<string>): void {
 		if (typeof obj !== "object" || obj === null) return;
 
+		const validKeys = new Set([
+			"avg", "pass", "fail", "audit", "year",
+			"dept", "instructor", "title", "uuid", "id"
+		]);
+
 		for (const key in obj) {
 			if (key.includes("_")) {
 				const datasetId = key.split("_")[0];
 				datasetIds.add(datasetId);
+
+				const queryKey = key.split("_")[1];
+				if (!validKeys.has(queryKey)) {
+					throw new InsightError(`Invalid query key '${queryKey}'.`);
+				}
 			}
 			this.extractDatasetIds(obj[key], datasetIds);
 		}
