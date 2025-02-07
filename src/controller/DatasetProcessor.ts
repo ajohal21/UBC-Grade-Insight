@@ -2,6 +2,7 @@ import fs from "fs-extra";
 import path from "path"; // For handling file paths
 import { Dataset } from "./types/Dataset";
 import { Section } from "./types/Section";
+import { InsightError } from "./IInsightFacade";
 
 export class DatasetProcessor {
 	private storagePath: string;
@@ -20,7 +21,7 @@ export class DatasetProcessor {
 		return new Promise((resolve, reject) => {
 			fs.readFile(filePath, "utf8", (err, data) => {
 				if (err) {
-					reject(new Error(`Failed to load dataset ${datasetId}: ${err.message}`));
+					reject(new InsightError(`Failed to load dataset ${datasetId}: ${err.message}`));
 					return;
 				}
 

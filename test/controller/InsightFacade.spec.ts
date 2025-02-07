@@ -409,5 +409,6 @@ describe("InsightFacade", function () {
 		it("[invalid/invalidUsingISForANumber.json] invalid using IS for a number", checkQuery);
 		it("[invalid/invalidKeyInColumnsClause.json] invalid key in columns clause", checkQuery);
 		it("[invalid/invalidKeyInWhereClause.json] invalid key in where clause", checkQuery);
+		it("[invalid/invalidSectionNotAdded.json] invalid section not added", checkQuery);
 	});
 });
