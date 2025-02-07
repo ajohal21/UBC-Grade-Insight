@@ -1,0 +1,169 @@
+{
+	"title": "query_with_uuid_and_title",
+	"input": {
+		"WHERE": {
+			"AND": [
+				{
+					"IS": {
+						"sections_uuid": "*2*"
+					}
+				},
+				{
+					"IS": {
+						"sections_title": "*eed*"
+					}
+				}
+			]
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_dept",
+				"sections_avg",
+				"sections_uuid",
+				"sections_title"
+			],
+			"ORDER": "sections_avg"
+		}
+	},
+	"errorExpected": false,
+	"expected": [
+		{
+			"sections_dept": "biol",
+			"sections_avg": 65.24,
+			"sections_uuid": "18112",
+			"sections_title": "weed science"
+		},
+		{
+			"sections_dept": "biol",
+			"sections_avg": 69.1,
+			"sections_uuid": "20589",
+			"sections_title": "weed science"
+		},
+		{
+			"sections_dept": "biol",
+			"sections_avg": 69.1,
+			"sections_uuid": "20588",
+			"sections_title": "weed science"
+		},
+		{
+			"sections_dept": "biol",
+			"sections_avg": 69.35,
+			"sections_uuid": "42168",
+			"sections_title": "weed science"
+		},
+		{
+			"sections_dept": "biol",
+			"sections_avg": 69.35,
+			"sections_uuid": "42167",
+			"sections_title": "weed science"
+		},
+		{
+			"sections_dept": "apbi",
+			"sections_avg": 69.58,
+			"sections_uuid": "32453",
+			"sections_title": "weed science"
+		},
+		{
+			"sections_dept": "apbi",
+			"sections_avg": 69.58,
+			"sections_uuid": "32452",
+			"sections_title": "weed science"
+		},
+		{
+			"sections_dept": "biol",
+			"sections_avg": 70.83,
+			"sections_uuid": "19642",
+			"sections_title": "weed science"
+		},
+		{
+			"sections_dept": "biol",
+			"sections_avg": 72.5,
+			"sections_uuid": "72104",
+			"sections_title": "weed science"
+		},
+		{
+			"sections_dept": "biol",
+			"sections_avg": 72.5,
+			"sections_uuid": "72103",
+			"sections_title": "weed science"
+		},
+		{
+			"sections_dept": "biol",
+			"sections_avg": 76.25,
+			"sections_uuid": "42176",
+			"sections_title": "intro seed plnts"
+		},
+		{
+			"sections_dept": "biol",
+			"sections_avg": 76.25,
+			"sections_uuid": "42175",
+			"sections_title": "intro seed plnts"
+		},
+		{
+			"sections_dept": "apbi",
+			"sections_avg": 77.26,
+			"sections_uuid": "24542",
+			"sections_title": "weed science"
+		},
+		{
+			"sections_dept": "apbi",
+			"sections_avg": 77.26,
+			"sections_uuid": "24541",
+			"sections_title": "weed science"
+		},
+		{
+			"sections_dept": "biol",
+			"sections_avg": 77.28,
+			"sections_uuid": "20597",
+			"sections_title": "intro seed plnts"
+		},
+		{
+			"sections_dept": "biol",
+			"sections_avg": 77.28,
+			"sections_uuid": "20596",
+			"sections_title": "intro seed plnts"
+		},
+		{
+			"sections_dept": "biol",
+			"sections_avg": 78.38,
+			"sections_uuid": "18120",
+			"sections_title": "intro seed plnts"
+		},
+		{
+			"sections_dept": "biol",
+			"sections_avg": 78.55,
+			"sections_uuid": "55112",
+			"sections_title": "intro seed plnts"
+		},
+		{
+			"sections_dept": "biol",
+			"sections_avg": 78.8,
+			"sections_uuid": "72112",
+			"sections_title": "intro seed plnts"
+		},
+		{
+			"sections_dept": "biol",
+			"sections_avg": 78.8,
+			"sections_uuid": "72111",
+			"sections_title": "intro seed plnts"
+		},
+		{
+			"sections_dept": "mrne",
+			"sections_avg": 83.57,
+			"sections_uuid": "63742",
+			"sections_title": "eco adp seaweeds"
+		},
+		{
+			"sections_dept": "eced",
+			"sections_avg": 92.67,
+			"sections_uuid": "42458",
+			"sections_title": "asmnt spec needs"
+		},
+		{
+			"sections_dept": "eced",
+			"sections_avg": 92.67,
+			"sections_uuid": "42457",
+			"sections_title": "asmnt spec needs"
+		}
+	]
+}
