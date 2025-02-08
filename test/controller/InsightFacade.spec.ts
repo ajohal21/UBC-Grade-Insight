@@ -89,6 +89,17 @@ describe("InsightFacade", function () {
 			expect(err).to.be.instanceOf(InsightError);
 		});
 
+		it("should reject with an nonbase 64 content", async function () {
+			let err: any;
+			try {
+				await facade.addDataset("aman", "SGVsbG8gV29ybGQh", InsightDatasetKind.Sections);
+				expect.fail("Expected Fail because of invalid base64");
+			} catch (error) {
+				err = error;
+			}
+			expect(err).to.be.instanceOf(InsightError);
+		});
+
 		it("should successfully add a dataset", async function () {
 			const result = await facade.addDataset("aman", course, InsightDatasetKind.Sections);
 			return expect(result).to.have.members(["aman"]);
