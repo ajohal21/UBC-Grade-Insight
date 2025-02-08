@@ -27,6 +27,10 @@ export default class InsightFacade implements IInsightFacade {
 
 	public async addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
 		this.validDatasetID(id);
+
+		if (!this.isBase64(content)) {
+			throw new InsightError("Not base64 string");
+		}
 		//call load to see if the ID is present
 		//is it better to load All or load the specific ID...
 
@@ -224,6 +228,16 @@ export default class InsightFacade implements IInsightFacade {
 	public validDatasetID(id: string): void {
 		if (!id || id.includes("_") || id.trim().length === 0) {
 			throw new InsightError("White space, empty string, or underscore id");
+		}
+	}
+
+	public isBase64(str: string): boolean {
+		try {
+			// Attempt to decode the string. If it's not base64, this will throw an error.
+			Buffer.from(str, "base64").toString("ascii");
+			return true; // If decoding succeeds, it's valid base64.
+		} catch {
+			return false; // If decoding fails, it's not valid base64.
 		}
 	}
 }
