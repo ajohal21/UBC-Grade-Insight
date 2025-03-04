@@ -720,6 +720,10 @@ describe("InsightFacade", function () {
 		it("[valid/validSortingWithStringTypeColumn.json] valid sorting with string type column", checkQuery);
 		it("[valid/validANDORGTLTEQISNOTWILDCARD.json] valid AND OR GT LT EQ IS NOT WILDCARD", checkQuery);
 
+		// C2 tests
+		it("[valid/order_by_ins_and_dept.json] valid sort down by two columns", checkQuery);
+		it("[valid/order_by_ins_and_dept_up.json] valid sort up by two columns", checkQuery);
+
 		//Invalid
 		it("[invalid/invalid.json] Query missing WHERE", checkQuery);
 		it("[invalid/invalid sections_dept cpsc AsterixInMiddle.json] sections_dept cp*sc asterix in middle", checkQuery);
