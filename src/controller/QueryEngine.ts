@@ -1,6 +1,7 @@
 import { Dataset } from "./types/Dataset";
 import { DatasetProcessor } from "./DatasetProcessor";
 import { Section } from "./types/Section";
+import { Room } from "./types/Room";
 import { Query } from "./types/Query";
 import { InsightError, InsightResult, ResultTooLargeError } from "./IInsightFacade";
 
@@ -43,6 +44,42 @@ export class QueryEngine {
 	}
 
 	/**
+	 * Retrieves the value of a specific field from a Room object.
+	 * @param room - The Room instance containing room data.
+	 * @param key - The dataset-prefixed column name (e.g., "rooms_lat").
+	 * @returns The corresponding field value as a string or number.
+	 * @throws InsightError if the key does not correspond to a valid room field.
+	 */
+	private getRoomValue(room: Room, key: string): string | number {
+		const fieldMap: Record<string, (r: Room) => string | number> = {
+			fullname: (r) => r.getFullname(),
+			shortname: (r) => r.getShortname(),
+			number: (r) => r.getNumber(),
+			name: (r) => r.getName(),
+			address: (r) => r.getAddress(),
+			lat: (r) => r.getLat(),
+			lon: (r) => r.getLon(),
+			seats: (r) => r.getSeats(),
+			type: (r) => r.getType(),
+			furniture: (r) => r.getFurniture(),
+			href: (r) => r.getHref(),
+		};
+
+		// Extract field name by removing dataset ID prefix (rooms_lat -> lat)
+		const fieldName = key.split("_")[1];
+
+		if (!fieldMap[fieldName]) {
+			throw new InsightError(`Column '${key}' not found in room.`);
+		}
+
+		const value = fieldMap[fieldName](room);
+		if (["lat", "lon", "seats"].includes(fieldName)) {
+			return Number(value); // Return numeric values for lat, lon, and seats
+		}
+		return String(value); // Return string for other fields
+	}
+
+	/**
 	 * Recursively extracts dataset IDs from query filters.
 	 * @param obj - The query object containing filtering conditions.
 	 * @param datasetIds - A set to store extracted dataset IDs.
@@ -51,7 +88,11 @@ export class QueryEngine {
 	private extractDatasetIds(obj: any, datasetIds: Set<string>): void {
 		if (typeof obj !== "object" || obj === null) return;
 
-		const validKeys = new Set(["avg", "pass", "fail", "audit", "year", "dept", "instructor", "title", "uuid", "id"]);
+		// const validKeys = new Set(["avg", "pass", "fail", "audit", "year", "dept", "instructor", "title", "uuid", "id"]);
+		const validKeys = new Set([
+			"avg", "pass", "fail", "audit", "year", "dept", "instructor", "title", "uuid", "id", // Section fields
+			"fullname", "shortname", "number", "name", "address", "lat", "lon", "seats", "type", "furniture", "href" // Room fields
+		]);
 
 		for (const key in obj) {
 			if (key.includes("_")) {
@@ -118,56 +159,62 @@ export class QueryEngine {
 	/**
 	 * Evaluates an AND condition: all subconditions must be true for the overall condition to be true.
 	 * @param conditions - An array of conditions to be evaluated.
-	 * @param section - The section being evaluated against the conditions.
+	 * @param content - The section or room being evaluated against the conditions.
 	 * @returns `true` if all subconditions are true, otherwise `false`.
 	 */
-	private handleAND(conditions: any[], section: Section): boolean {
-		return conditions.every((subCondition) => this.evaluateCondition(subCondition, section));
+	private handleAND(conditions: any[], content: Section | Room): boolean {
+		return conditions.every((subCondition) => this.evaluateCondition(subCondition, content));
 	}
 
 	/**
 	 * Evaluates an OR condition: at least one subcondition must be true for the overall condition to be true.
 	 * @param conditions - An array of conditions to be evaluated.
-	 * @param section - The section being evaluated against the conditions.
+	 * @param content - The section or room being evaluated against the conditions.
 	 * @returns `true` if at least one subcondition is true, otherwise `false`.
 	 */
-	private handleOR(conditions: any[], section: Section): boolean {
-		return conditions.some((subCondition) => this.evaluateCondition(subCondition, section));
+	private handleOR(conditions: any[], content: Section | Room): boolean {
+		return conditions.some((subCondition) => this.evaluateCondition(subCondition, content));
 	}
 
 	/**
 	 * Handles comparisons using GT, LT, EQ, and IS operators.
 	 * @param operator - The comparison operator to use.
 	 * @param condition - The condition object containing the dataset key (e.g., "sections_avg") and the value.
-	 * @param section - The section being evaluated against the condition.
+	 * @param content - The section being evaluated against the condition.
 	 * @returns `true` if the condition is satisfied, otherwise `false`.
 	 * @throws InsightError if the comparison operator is invalid or if the data types do not match the expected types.
 	 */
+	// NOLINTNEXTLINE
 	private handleComparator(
 		operator: "GT" | "LT" | "EQ" | "IS",
 		condition: Record<string, any>,
-		section: Section
+		content: Section | Room
 	): boolean {
 		const datasetKey = Object.keys(condition)[0]; // "sections_avg"
 		const column = datasetKey.split("_")[1]; // Extract "avg"
 		const value = condition[datasetKey]; // the value
 
-		// Get the actual value from this Section
-		const sectionValue = this.getSectionValue(section, datasetKey);
+		// Get the actual value from this Section or Room
+		let contentValue: string | number;
+		if (content instanceof Section) {
+			contentValue = this.getSectionValue(content, datasetKey);
+		} else {
+			contentValue = this.getRoomValue(content, datasetKey);
+		}
 
-		if (operator !== "IS" && typeof sectionValue !== "number") {
+		if (operator !== "IS" && typeof contentValue !== "number") {
 			throw new InsightError(`Invalid query: '${column}' must be a numeric field for '${operator}' operator.`);
 		}
 
 		switch (operator) {
 			case "GT":
-				return sectionValue > value;
+				return contentValue > value;
 			case "LT":
-				return sectionValue < value;
+				return contentValue < value;
 			case "EQ":
-				return sectionValue === value;
+				return contentValue === value;
 			case "IS":
-				if (typeof sectionValue !== "string" || typeof value !== "string") {
+				if (typeof contentValue !== "string" || typeof value !== "string") {
 					throw new InsightError(`Invalid query: '${column}' must be a string field for 'IS' operator.`);
 				}
 
@@ -179,7 +226,7 @@ export class QueryEngine {
 
 				const regexPattern = "^" + value.replace(/\*/g, ".*") + "$";
 				const regex = new RegExp(regexPattern);
-				return regex.test(sectionValue);
+				return regex.test(contentValue);
 			default:
 				throw new InsightError(`Invalid operator: '${operator}'.`);
 		}
@@ -188,27 +235,27 @@ export class QueryEngine {
 	/**
 	 * Recursively evaluates a WHERE condition on a section.
 	 * @param filter - The filter condition (e.g., "AND", "OR", "GT", "LT", "EQ", "IS").
-	 * @param section - The section to evaluate against the filter.
+	 * @param content - The section or room to evaluate against the filter.
 	 * @returns `true` if the section satisfies the filter condition, otherwise `false`.
 	 * @throws InsightError if the filter contains an unsupported condition type.
 	 */
-	private evaluateCondition(filter: Record<string, any>, section: Section): boolean {
+	private evaluateCondition(filter: Record<string, any>, content: Section | Room): boolean {
 		// get the key (OR
 		// i.e., OR [{"GT": {"sections_avg": 97}},{"LT": {"sections_pass": 50}}]
 		const key = Object.keys(filter)[0];
 
 		switch (key) {
 			case "AND":
-				return this.handleAND(filter.AND, section);
+				return this.handleAND(filter.AND, content);
 			case "OR":
-				return this.handleOR(filter.OR, section);
+				return this.handleOR(filter.OR, content);
 			case "NOT":
-				return !this.evaluateCondition(filter.NOT, section);
+				return !this.evaluateCondition(filter.NOT, content);
 			case "GT":
 			case "LT":
 			case "EQ":
 			case "IS":
-				return this.handleComparator(key, filter[key], section);
+				return this.handleComparator(key, filter[key], content);
 			default:
 				throw new InsightError(`Unsupported filter type: ${key}`);
 		}
@@ -220,30 +267,52 @@ export class QueryEngine {
 	 * @param dataset - The dataset containing the sections to filter.
 	 * @returns A list of sections that satisfy the WHERE condition.
 	 */
-	public handleWhere(where: Record<string, any>, dataset: Dataset): Section[] {
+	public handleWhere(where: Record<string, any>, dataset: Dataset): Section[] | Room[] {
 		if (Object.keys(where).length === 0) {
-			return dataset.getSections(); // No filtering needed
+			return dataset.getContent(); // No filtering needed
 		}
 
-		return dataset.getSections().filter((section) => {
-			return this.evaluateCondition(where, section);
-		});
+		// return dataset.getContent().filter((content) => {
+		// 	return this.evaluateCondition(where, content);
+		// });
+
+		const datasetContent = dataset.getContent();
+		if (datasetContent.length > 0) {
+			if (datasetContent[0] instanceof Section) {
+				return datasetContent.filter((content) => {
+					return this.evaluateCondition(where, content);
+				}) as Section[];
+			} else if (datasetContent[0] instanceof Room) {
+				return datasetContent.filter((content) => {
+					return this.evaluateCondition(where, content);
+				}) as Room[];
+			}
+		}
+		return [];
 	}
 
 	/**
 	 * Sorts the given sections based on the provided order criteria.
 	 * @param order - The sorting order, which can be a string or an object specifying multiple sorting keys.
 	 * @param columns - The list of columns included in the query result.
-	 * @param sections - The array of sections to be sorted.
+	 * @param content - The array of sections or rooms to be sorted.
 	 * @throws InsightError if the order specification is invalid.
 	 */
-	private handleSort(order: any, columns: string[], sections: Section[]): void {
+	private handleSort(order: any, columns: string[], content: Section[] | Room[]): void {
 		const { keys, ascending } = this.validateOrder(order, columns);
-		sections.sort((a, b) => this.compareSections(a, b, keys, ascending));
+		content.sort((a, b) => this.compareSectionsOrRooms(a, b, keys, ascending));
+	}
+
+	private getValueFromObject(obj: Section | Room, key: string): string | number {
+		if (obj instanceof Section) {
+			return obj[key as keyof Section] as any;
+		} else {
+			return obj[key as keyof Room] as any;
+		}
 	}
 
 	/**
-	 * Compares two sections based on multiple sorting keys.
+	 * Compares two sections or rooms based on multiple sorting keys.
 	 * @param a - The first section to compare.
 	 * @param b - The second section to compare.
 	 * @param keys - The sorting keys in priority order.
@@ -252,11 +321,17 @@ export class QueryEngine {
 	 *          a positive number if 'b' should be ranked before 'a',
 	 *          or zero if they are equal based on the sorting keys.
 	 */
-	private compareSections(a: Section, b: Section, keys: string[], ascending: boolean): number {
+	private compareSectionsOrRooms(a: Section | Room, b: Section | Room, keys: string[], ascending: boolean): number {
 		for (const key of keys) {
-			const keyName = key.split("_")[1] as keyof Section;
-			const valA = a[keyName] as any;
-			const valB = b[keyName] as any;
+			let keyName: string;
+			if (a instanceof Section) {
+				keyName = key.split("_")[1] as keyof Section;
+			} else {
+				keyName = key.split("_")[1] as keyof Room;
+			}
+
+			const valA = this.getValueFromObject(a, keyName);
+			const valB = this.getValueFromObject(b, keyName);
 
 			let comparison = 0;
 			if (typeof valA === "number" && typeof valB === "number") {
@@ -307,28 +382,32 @@ export class QueryEngine {
 	/**
 	 * Processes the OPTIONS section of the query, applying sorting and selecting specified columns.
 	 * @param options - The OPTIONS clause of the query, containing COLUMNS and optionally ORDER.
-	 * @param sections - The array of sections that match the query conditions.
+	 * @param content - The array of sections or rooms that match the query conditions.
 	 * @returns An array of InsightResult objects containing only the requested columns.
 	 * @throws ResultTooLargeError if the query result exceeds the allowed limit.
 	 */
-	public handleOptions(options: Record<string, any>, sections: Section[]): InsightResult[] {
-		if (sections.length > this.limit) {
+	public handleOptions(options: Record<string, any>, content: Section[] | Room[]): InsightResult[] {
+		if (content.length > this.limit) {
 			throw new ResultTooLargeError(`Query result too large.`);
 		}
 
 		const columns: string[] = options.COLUMNS ?? [];
 
 		// Validate ORDER in COLUMNS if it exists, and sort if so
-		// Validate and sort sections
+		// Validate and sort content
 		if ("ORDER" in options) {
-			this.handleSort(options.ORDER, columns, sections);
+			this.handleSort(options.ORDER, columns, content);
 		}
 
-		// Transform each section into an InsightResult object
-		return sections.map((section) => {
+		// Transform each section or room into an InsightResult object
+		return content.map((section_or_room) => {
 			const result: InsightResult = {};
 			for (const column of columns) {
-				result[column] = this.getSectionValue(section, column);
+				if (section_or_room instanceof Section) {
+					result[column] = this.getSectionValue(section_or_room, column);
+				} else {
+					result[column] = this.getRoomValue(section_or_room, column);
+				}
 			}
 			return result;
 		});
@@ -354,7 +433,7 @@ export class QueryEngine {
 			throw new InsightError(`Dataset with ID '${datasetId}' not found.`);
 		}
 
-		const queriedSections: Section[] = this.handleWhere(query.WHERE ?? {}, dataset);
-		return this.handleOptions(query.OPTIONS ?? {}, queriedSections);
+		const queriedContent: Section[] | Room[] = this.handleWhere(query.WHERE ?? {}, dataset);
+		return this.handleOptions(query.OPTIONS ?? {}, queriedContent);
 	}
 }

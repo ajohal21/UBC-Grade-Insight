@@ -8,9 +8,9 @@ import {
 } from "../../src/controller/IInsightFacade";
 //
 import InsightFacade from "../../src/controller/InsightFacade";
-import {clearDisk, getContentFromArchives, loadTestQuery} from "../TestUtil";
+import { clearDisk, getContentFromArchives, loadTestQuery } from "../TestUtil";
 
-import {expect, use} from "chai";
+import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 
 use(chaiAsPromised);
@@ -26,7 +26,6 @@ describe("InsightFacade", function () {
 	let facade: IInsightFacade;
 
 	let sections: string;
-	//file that is not base64 zipped
 
 	//zip that does not have courses folder as root
 	let notCourses: string;
@@ -137,18 +136,16 @@ describe("InsightFacade", function () {
 		it("should successfully add a dataset clear disk, add have just the one", async function () {
 			await facade.addDataset("aman", course, InsightDatasetKind.Sections);
 			const result = await facade.addDataset("kylee", course, InsightDatasetKind.Sections);
-			expect(result).to.have.members(["aman", 'kylee']);
+			expect(result).to.have.members(["aman", "kylee"]);
 			const newFacade = new InsightFacade();
-			const res = await newFacade.listDatasets()
+			const res = await newFacade.listDatasets();
 			expect(res.length).to.equal(2);
 			await clearDisk();
-			const rez = await newFacade.listDatasets()
+			const rez = await newFacade.listDatasets();
 			expect(rez.length).to.equal(0);
 
 			const r = await newFacade.addDataset("aman", course, InsightDatasetKind.Sections);
 			expect(r).to.have.members(["aman"]);
-
-
 		});
 
 		it("should successfully add a dataset with / in name", async function () {
@@ -548,13 +545,14 @@ describe("InsightFacade", function () {
 			const facade2: InsightFacade = new InsightFacade();
 			await facade2.addDataset("aj21", sections, InsightDatasetKind.Sections);
 
-
 			const facade3: InsightFacade = new InsightFacade();
 			const result = await facade3.listDatasets();
 			//expect(result).to.be.an("array");
-			expect(result).to.have.deep.members([{ id: "aj21", kind: InsightDatasetKind.Sections, numRows: 64612 },
+			expect(result).to.have.deep.members([
+				{ id: "aj21", kind: InsightDatasetKind.Sections, numRows: 64612 },
 				{ id: "kylee", kind: InsightDatasetKind.Sections, numRows: 64612 },
-				{ id: "aman", kind: InsightDatasetKind.Sections, numRows: 64612 }]);
+				{ id: "aman", kind: InsightDatasetKind.Sections, numRows: 64612 },
+			]);
 		});
 
 		it("should list dataset as an array", async function () {
@@ -723,6 +721,7 @@ describe("InsightFacade", function () {
 		// C2 tests
 		it("[valid/order_by_ins_and_dept.json] valid sort down by two columns", checkQuery);
 		it("[valid/order_by_ins_and_dept_up.json] valid sort up by two columns", checkQuery);
+		it("[valid/use_rooms.json] test using rooms datatype", checkQuery);
 
 		//Invalid
 		it("[invalid/invalid.json] Query missing WHERE", checkQuery);
