@@ -32,7 +32,7 @@ export default class InsightFacade implements IInsightFacade {
 		}
 
 		if (kind === InsightDatasetKind.Rooms){
-			//processRoom
+			return this.processRoomKind(id, content);
 		} else {
 			return this.processSectionKind(id, content);
 		}
@@ -93,29 +93,69 @@ export default class InsightFacade implements IInsightFacade {
 		}
 
 		//need to find first VALID table
-		const parsedDoc = parse5.parse((indexFile));
+		const indexFileContent = await indexFile.async("text");
+		const parsedDoc = parse5.parse((indexFileContent));
 
-		const validTable = firstValidTable(parsedDoc)
-		//first find all tables
+		const validTable = this.firstValidTable(parsedDoc)
+
+		if(!validTable) {
+			throw new InsightError("No valid table!");
+		}
+
+
+		return [];
 	}
 
 	//function to check that Table exists and is valid
-	public async firstValidTable(doc:string) : any {
+	public firstValidTable(doc:string) : any {
 		//first check that table exists
-		const allTables = this.findAllTables(doc);
+		const allTables = this.findByName(doc, "table");
+		for (const table of allTables) {
+			if (this.hasValidBuilding(table)) {
+				return table;
+			}
+		}
+		return null;
 
 	}
 
+	//Function to retrieve the cells with TD tag and verify the presence of the two fields we need as
+	//described in the spec
+	public  hasValidBuilding(table: any): boolean {
+		const cells = this.findByName(table, "td");
+		let viewsFieldTitle = false;
+		let buildingAddress = false;
+
+		for (const cell of cells) {
+			const classAttribute = cell.attrs?.find((attr: any) => attr.name === "class");
+			if (classAttribute) {
+				const cellClasses = classAttribute.value.split(" ");
+				if (cellClasses.includes("views-field") && cellClasses.includes("views-field-title")) {
+					viewsFieldTitle = true;
+				}
+				if (cellClasses.includes("views-field") && cellClasses.includes("views-field-field-building-address")) {
+					buildingAddress = true;
+				}
+			}
+		}
+
+		if (viewsFieldTitle && buildingAddress) {
+			return true; // Found a valid row with both classes
+		}
+		return false;
+	}
+
+
 	//recursive function to add "table" tag to array -- adapted from Gemini
-	public async findAllTables(doc:any): any[] {
+	public findByName(doc:any, text:string): any[] {
 		const tables: any[] = [];
-		if(doc.tagName === "table") {
+		if(doc.tagName === text) {
 			tables.push(doc);
 		}
 
 		if(doc.childNodes && Array.isArray(doc.childNodes)) {
 			for (const child of doc.childNodes) {
-				tables.push(...this.findAllTables(child));
+				tables.push(...this.findByName(child, text));
 			}
 		}
 		return tables;
