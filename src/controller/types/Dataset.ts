@@ -24,6 +24,10 @@ export class Dataset {
 		return this.id;
 	}
 
+	public getKind(): InsightDatasetKind {
+		return this.kind;
+	}
+
 	public getContent(): Section[] | Room[] {
 		if (this.kind === InsightDatasetKind.Sections) {
 			return this.sections!;

@@ -13,6 +13,7 @@ import { Dataset } from "./types/Dataset";
 import { QueryEngine } from "./QueryEngine";
 import fs from "fs-extra";
 import path from "path";
+import { RoomProcessor } from "./RoomProcessor";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -22,6 +23,7 @@ import path from "path";
 export default class InsightFacade implements IInsightFacade {
 	private datasets: any[] = []; // Using a simple object to store datasets for now
 	private queryEngine: QueryEngine = new QueryEngine();
+	private roomProcessor: RoomProcessor = new RoomProcessor();
 	private processor = new DatasetProcessor("../../data/");
 	private sectionDatasetArray: any[] = [];
 
@@ -32,94 +34,10 @@ export default class InsightFacade implements IInsightFacade {
 		}
 
 		if (kind === InsightDatasetKind.Rooms) {
-			//processRoom
+			return this.roomProcessor.processRoomKind(id, content);
 		} else {
 			return this.processSectionKind(id, content);
 		}
-		return Promise.resolve([]);
-
-		// if (!this.isBase64(content)) {
-		// 	throw new InsightError("Not base64 string");
-		// }
-		// //call load to see if the ID is present
-		// //is it better to load All or load the specific ID...
-		//
-		// if (await this.processor.doesDatasetExist(id)) {
-		// 	throw new InsightError("dataset with id already exists");
-		// }
-		//
-		// try {
-		// 	this.sectionDatasetArray = [];
-		// 	const zip = new JSZip();
-		// 	const zipResult = await zip.loadAsync(content, { base64: true });
-		//
-		// 	this.validZip(zipResult);
-		//
-		// 	const filePromises: Promise<void>[] = [];
-		// 	zip.forEach((local, file) => {
-		// 		if (!file.dir && local.startsWith("courses/")) {
-		// 			//process data into sections
-		// 			filePromises.push(this.processJsonData(file));
-		// 		}
-		// 	});
-		// 	await Promise.all(filePromises);
-		//
-		// 	//all sections now in sectionDatasetArray
-		// 	//now make Dataset with id and DatasetArray
-		// 	const newDataset = new Dataset(id, this.sectionDatasetArray);
-		// 	await this.processor.saveToDisk(newDataset);
-		//
-		// 	//this.datasets.push(id);
-		// 	//now we just load the diskID after an add
-		// 	const diskDatasetID = await this.processor.getAllDatasetIds();
-		//
-		// 	return Promise.resolve(diskDatasetID);
-		// } catch (err) {
-		// 	return Promise.reject(new InsightError(`invalid content: ${err}`));
-		// }
-	}
-
-	public async processRoomKind(id: string, content: string): Promise<string[]> {
-		const zip = new JSZip();
-		const data = await zip.loadAsync(content, { base64: true });
-		const parse5 = require("parse5");
-		const indexFile = data.file("index.htm");
-
-		//no index file
-		if (!indexFile) {
-			throw new InsightError("Index.htm file not present");
-		}
-
-		//need to find first VALID table
-		const parsedDoc = parse5.parse(indexFile);
-
-		const validTable = this.firstValidTable(parsedDoc);
-		//first find all tables
-
-		return []; // KYLEE NOTE: added return statement here
-	}
-
-	//function to check that Table exists and is valid
-	public async firstValidTable(doc: string): Promise<any> {
-		// KYLEE NOTE:  made this Promise<any> to compile
-		//first check that table exists
-		const allTables = this.findAllTables(doc);
-	}
-
-	//recursive function to add "table" tag to array -- adapted from Gemini
-	public async findAllTables(doc: any): Promise<any[]> {
-		const tables: any[] = [];
-		if (doc.tagName === "table") {
-			tables.push(doc);
-		}
-
-		if (doc.childNodes && Array.isArray(doc.childNodes)) {
-			for (const child of doc.childNodes) {
-				const childTables = await this.findAllTables(child); // KYLEE NOTE: added await here before pushing
-				tables.push(...childTables);
-			}
-		}
-		return tables;
 	}
 
 	public async processSectionKind(id: string, content: string): Promise<string[]> {
@@ -306,7 +224,7 @@ export default class InsightFacade implements IInsightFacade {
 		for (const dataset of allData) {
 			insightData.push({
 				id: dataset.getId(),
-				kind: InsightDatasetKind.Sections,
+				kind: dataset.getKind(),
 				numRows: dataset.getContent().length,
 			});
 		}

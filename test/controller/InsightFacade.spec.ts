@@ -42,6 +42,18 @@ describe("InsightFacade", function () {
 
 	let jsonMissingComma: string;
 
+	let campus: string;
+
+	let campusNoIndex: string;
+
+	let campusNoTables: string;
+
+	let campusNoBuidlingandRoom: string;
+
+	let campusEmptyBuildings: string;
+
+	let campusNoGoodTd: string;
+
 	before(async function () {
 		sections = await getContentFromArchives("pair.zip");
 		notCourses = await getContentFromArchives("NoCoursesRoot.zip");
@@ -52,6 +64,12 @@ describe("InsightFacade", function () {
 		invalidSection = await getContentFromArchives("invalidSection.zip");
 		noResultskey = await getContentFromArchives("noResultkey.zip");
 		jsonMissingComma = await getContentFromArchives("jsonMissingComma.zip");
+		campus = await getContentFromArchives("campus.zip");
+		campusNoIndex = await getContentFromArchives("campusNoIndex.zip");
+		campusNoTables = await getContentFromArchives("campusNoTables.zip");
+		campusNoBuidlingandRoom = await getContentFromArchives("campusNoBuildingandRoom.zip");
+		campusEmptyBuildings = await getContentFromArchives("campusEmptyBuildings.zip");
+		campusNoGoodTd = await getContentFromArchives("campusNoGoodTd.zip");
 	});
 
 	describe("AddDataset", function () {
@@ -69,7 +87,7 @@ describe("InsightFacade", function () {
 			let err: any;
 
 			try {
-				await facade.addDataset("", sections, InsightDatasetKind.Rooms);
+				await facade.addDataset("", campus, InsightDatasetKind.Rooms);
 				expect.fail("Expected Fail here!");
 			} catch (error) {
 				err = error;
@@ -80,7 +98,7 @@ describe("InsightFacade", function () {
 		it("should reject with an dataset ID with an underscore -- Rooms", async function () {
 			let err: any;
 			try {
-				await facade.addDataset("6983_", sections, InsightDatasetKind.Rooms);
+				await facade.addDataset("6983_", campus, InsightDatasetKind.Rooms);
 				expect.fail("Expected Fail because of underscore");
 			} catch (error) {
 				err = error;
@@ -88,8 +106,63 @@ describe("InsightFacade", function () {
 			expect(err).to.be.instanceOf(InsightError);
 		});
 
+		it("should reject with an no index.htm file -- Rooms", async function () {
+			let err: any;
+			try {
+				await facade.addDataset("noIndex", campusNoIndex, InsightDatasetKind.Rooms);
+				expect.fail("Expected Fail because of no Index file");
+			} catch (error) {
+				err = error;
+			}
+			expect(err).to.be.instanceOf(InsightError);
+		});
+
+		it("should reject with no table in index.htm file -- Rooms", async function () {
+			let err: any;
+			try {
+				await facade.addDataset("noIndex", campusNoTables, InsightDatasetKind.Rooms);
+				expect.fail("Expected Fail because of no tables in index file");
+			} catch (error) {
+				err = error;
+			}
+			expect(err).to.be.instanceOf(InsightError);
+		});
+
+		it("should reject with no buildingsandRoom file -- Rooms", async function () {
+			let err: any;
+			try {
+				await facade.addDataset("noIndex", campusNoBuidlingandRoom, InsightDatasetKind.Rooms);
+				expect.fail("Expected Fail because of no tables in index file");
+			} catch (error) {
+				err = error;
+			}
+			expect(err).to.be.instanceOf(InsightError);
+		});
+
+		it("should reject with empty buildings file -- Rooms", async function () {
+			let err: any;
+			try {
+				await facade.addDataset("noIndex", campusEmptyBuildings, InsightDatasetKind.Rooms);
+				expect.fail("Expected Fail because of no tables in index file");
+			} catch (error) {
+				err = error;
+			}
+			expect(err).to.be.instanceOf(InsightError);
+		});
+
+		it("should reject with no good td file in Index", async function () {
+			let err: any;
+			try {
+				await facade.addDataset("noIndex", campusNoGoodTd, InsightDatasetKind.Rooms);
+				expect.fail("Expected Fail because of no tables in index file");
+			} catch (error) {
+				err = error;
+			}
+			expect(err).to.be.instanceOf(InsightError);
+		});
+
 		it("should successfully add a dataset -- Rooms", async function () {
-			const result = await facade.addDataset("aman", course, InsightDatasetKind.Rooms);
+			const result = await facade.addDataset("aman", campus, InsightDatasetKind.Rooms);
 			return expect(result).to.have.members(["aman"]);
 		});
 
@@ -262,6 +335,14 @@ describe("InsightFacade", function () {
 
 		it("should successfully add multiple valid datasets", async function () {
 			const result = await facade.addDataset("aman", course, InsightDatasetKind.Sections);
+			expect(result).to.have.members(["aman"]);
+			const result2 = await facade.addDataset("aman2", course, InsightDatasetKind.Sections);
+
+			expect(result2).to.have.members(["aman", "aman2"]);
+		});
+
+		it("should successfully add a rooms and sections", async function () {
+			const result = await facade.addDataset("aman", campus, InsightDatasetKind.Rooms);
 			expect(result).to.have.members(["aman"]);
 			const result2 = await facade.addDataset("aman2", course, InsightDatasetKind.Sections);
 
@@ -557,6 +638,13 @@ describe("InsightFacade", function () {
 
 		it("should list dataset as an array", async function () {
 			await facade.addDataset("aman", sections, InsightDatasetKind.Sections);
+			const result = await facade.listDatasets();
+			//expect(result).to.be.an("array");
+			expect(result).to.deep.equal([{ id: "aman", kind: InsightDatasetKind.Sections, numRows: 64612 }]);
+		});
+
+		it("should list dataset as an array - Rooms", async function () {
+			await facade.addDataset("aman", campus, InsightDatasetKind.Rooms);
 			const result = await facade.listDatasets();
 			//expect(result).to.be.an("array");
 			expect(result).to.deep.equal([{ id: "aman", kind: InsightDatasetKind.Sections, numRows: 64612 }]);
