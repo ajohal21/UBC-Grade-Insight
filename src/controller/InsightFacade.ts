@@ -6,11 +6,11 @@ import {
 	InsightResult,
 	NotFoundError,
 } from "./IInsightFacade";
-import {DatasetProcessor} from "./DatasetProcessor";
+import { DatasetProcessor } from "./DatasetProcessor";
 import JSZip from "jszip";
-import {Section} from "./types/Section";
-import {Dataset} from "./types/Dataset";
-import {QueryEngine} from "./QueryEngine";
+import { Section } from "./types/Section";
+import { Dataset } from "./types/Dataset";
+import { QueryEngine } from "./QueryEngine";
 import fs from "fs-extra";
 import path from "path";
 
@@ -31,7 +31,7 @@ export default class InsightFacade implements IInsightFacade {
 			throw new InsightError("dataset with id already exists");
 		}
 
-		if (kind === InsightDatasetKind.Rooms){
+		if (kind === InsightDatasetKind.Rooms) {
 			return this.processRoomKind(id, content);
 		} else {
 			return this.processSectionKind(id, content);
@@ -80,34 +80,141 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public async processRoomKind(id: string, content: string): Promise<string[]> {
-
-
 		const zip = new JSZip();
 		const data = await zip.loadAsync(content, { base64: true });
 		const parse5 = require("parse5");
 		const indexFile = data.file("index.htm");
 
 		//no index file
-		if(!indexFile) {
+		if (!indexFile) {
 			throw new InsightError("Index.htm file not present");
 		}
 
 		//need to find first VALID table
 		const indexFileContent = await indexFile.async("text");
-		const parsedDoc = parse5.parse((indexFileContent));
+		const parsedDoc = parse5.parse(indexFileContent);
 
-		const validTable = this.firstValidTable(parsedDoc)
+		const validTable = this.firstValidTable(parsedDoc);
 
-		if(!validTable) {
+		if (!validTable) {
 			throw new InsightError("No valid table!");
 		}
 
+		const buildings = await this.parseBuildings(validTable);
+		//all buildings have now been added and their relevant data
+
+		//next map building to Room data
 
 		return [];
 	}
 
+	//Gemini adopted code to creat a building from table entry
+	public async parseBuildings(buildingTable: any): Promise<any> {
+		const rows = this.findByName(buildingTable, "tr");
+
+		const buildings = await Promise.all(rows.map(async (row) => this.parseBuildingRow(row)));
+
+		return buildings.filter((building) => building !== null);
+	}
+
+	public async parseBuildingRow(row: any): Promise<any> {
+		const titleCell = this.findCell(row, "views-field-title");
+		const addressCell = this.findCell(row, "views-field-field-building-address");
+
+		if (titleCell && addressCell) {
+			const fullname = this.getFullname(titleCell);
+			const link = this.getLink(titleCell);
+			const shortname = this.getShortName(link);
+			const href = link ? link.attrs.find((attr: any) => attr.name === "href")?.value.replace("./", "") : null;
+			const address = this.getAddress(addressCell);
+
+			try {
+				// Fetch geolocation
+				const geoResponse = await this.fetchGeolocation(address);
+
+				// Check if there was an error in fetching geolocation
+				if (geoResponse.error) {
+					return null;
+				}
+
+				return {
+					fullname: fullname,
+					shortname: shortname,
+					address: address,
+					lat: geoResponse.lat,
+					lon: geoResponse.lon,
+					buildinghref: href,
+				};
+			} catch (e) {
+				throw new InsightError(`invalid GeoLocation: ${e}`);
+			}
+		}
+		return null;
+	}
+
+	public getLink(cell: any): any {
+		const links = this.findByName(cell, "a");
+		if (links.length > 0) {
+			return links[0];
+		}
+		return null;
+	}
+	//gemini adapted to get shortName from the link -- prompt from inspect element
+	public getShortName(link: any): string | null {
+		if (link?.attrs) {
+			const href = link.attrs.find((attr: any) => attr.name === "href")?.value;
+			if (href) {
+				const match = href.match(/\/([A-Z]+)\.htm/); // Extract the shortname from the href
+				if (match?.[1]) {
+					return match[1];
+				}
+			}
+		}
+		return null;
+	}
+
+	//gemini consulted code
+	public getFullname(cell: any): string {
+		let fullname = "";
+		if (cell.childNodes) {
+			for (const childNode of cell.childNodes) {
+				if (childNode.nodeName === "a") {
+					// Extract text content directly from the <a> tag
+					if (childNode.childNodes) {
+						for (const textNode of childNode.childNodes) {
+							if (textNode.nodeName === "#text") {
+								fullname += textNode.value.trim();
+							}
+						}
+					}
+					break; // Assuming there's only one <a> tag with the full name
+				}
+			}
+		}
+		return fullname;
+	}
+
+	public getAddress(cell: any): string {
+		let address = "";
+		if (cell.childNodes) {
+			for (const textNode of cell.childNodes) {
+				if (textNode.nodeName === "#text") {
+					address += textNode.value.trim();
+				}
+			}
+		}
+		return address;
+	}
+
+	public findCell(row: any, text: string): any {
+		return this.findByName(row, "td").find((cell) => {
+			const classAttr = cell.attrs?.find((attr: any) => attr.name === "class");
+			return classAttr?.value.split(" ").includes(text);
+		});
+	}
+
 	//function to check that Table exists and is valid
-	public firstValidTable(doc:string) : any {
+	public firstValidTable(doc: string): any {
 		//first check that table exists
 		const allTables = this.findByName(doc, "table");
 		for (const table of allTables) {
@@ -116,12 +223,11 @@ export default class InsightFacade implements IInsightFacade {
 			}
 		}
 		return null;
-
 	}
 
 	//Function to retrieve the cells with TD tag and verify the presence of the two fields we need as
 	//described in the spec
-	public  hasValidBuilding(table: any): boolean {
+	public hasValidBuilding(table: any): boolean {
 		const cells = this.findByName(table, "td");
 		let viewsFieldTitle = false;
 		let buildingAddress = false;
@@ -145,26 +251,22 @@ export default class InsightFacade implements IInsightFacade {
 		return false;
 	}
 
-
 	//recursive function to add "table" tag to array -- adapted from Gemini
-	public findByName(doc:any, text:string): any[] {
+	public findByName(doc: any, text: string): any[] {
 		const tables: any[] = [];
-		if(doc.tagName === text) {
+		if (doc.tagName === text) {
 			tables.push(doc);
 		}
 
-		if(doc.childNodes && Array.isArray(doc.childNodes)) {
+		if (doc.childNodes && Array.isArray(doc.childNodes)) {
 			for (const child of doc.childNodes) {
 				tables.push(...this.findByName(child, text));
 			}
 		}
 		return tables;
-
-
 	}
 
 	public async processSectionKind(id: string, content: string): Promise<string[]> {
-
 		if (!this.isBase64(content)) {
 			throw new InsightError("Not base64 string");
 		}
@@ -198,7 +300,6 @@ export default class InsightFacade implements IInsightFacade {
 			return Promise.reject(new InsightError(`invalid content: ${err}`));
 		}
 	}
-
 
 	/**
 	 * Check that the file unzipped has
@@ -370,5 +471,12 @@ export default class InsightFacade implements IInsightFacade {
 		} catch {
 			return false; // If decoding fails, it's not valid base64.
 		}
+	}
+
+	public async fetchGeolocation(address: string): Promise<any> {
+		const encodedAddress = encodeURIComponent(address); // URL-encode the address
+		const url = `http://cs310.students.cs.ubc.ca:11316/api/v1/project_team180/${encodedAddress}`;
+		const response = await fetch(url);
+		return await response.json();
 	}
 }

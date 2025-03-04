@@ -1,8 +1,8 @@
 import fs from "fs-extra";
 import path from "path"; // For handling file paths
-import {Dataset} from "./types/Dataset";
-import {Section} from "./types/Section";
-import {InsightDatasetKind, InsightError} from "./IInsightFacade";
+import { Dataset } from "./types/Dataset";
+import { Section } from "./types/Section";
+import { InsightDatasetKind, InsightError } from "./IInsightFacade";
 
 export class DatasetProcessor {
 	private storagePath: string;
