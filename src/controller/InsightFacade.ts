@@ -13,6 +13,7 @@ import { Dataset } from "./types/Dataset";
 import { QueryEngine } from "./QueryEngine";
 import fs from "fs-extra";
 import path from "path";
+import {RoomProcessor} from "./RoomProcessor";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -22,6 +23,7 @@ import path from "path";
 export default class InsightFacade implements IInsightFacade {
 	private datasets: any[] = []; // Using a simple object to store datasets for now
 	private queryEngine: QueryEngine = new QueryEngine();
+	private roomProcessor: RoomProcessor = new RoomProcessor();
 	private processor = new DatasetProcessor("../../data/");
 	private sectionDatasetArray: any[] = [];
 
@@ -32,238 +34,10 @@ export default class InsightFacade implements IInsightFacade {
 		}
 
 		if (kind === InsightDatasetKind.Rooms) {
-			return this.processRoomKind(id, content);
+			return this.roomProcessor.processRoomKind(id, content);
 		} else {
 			return this.processSectionKind(id, content);
 		}
-		return Promise.resolve([]);
-
-		// if (!this.isBase64(content)) {
-		// 	throw new InsightError("Not base64 string");
-		// }
-		// //call load to see if the ID is present
-		// //is it better to load All or load the specific ID...
-		//
-		// if (await this.processor.doesDatasetExist(id)) {
-		// 	throw new InsightError("dataset with id already exists");
-		// }
-		//
-		// try {
-		// 	this.sectionDatasetArray = [];
-		// 	const zip = new JSZip();
-		// 	const zipResult = await zip.loadAsync(content, { base64: true });
-		//
-		// 	this.validZip(zipResult);
-		//
-		// 	const filePromises: Promise<void>[] = [];
-		// 	zip.forEach((local, file) => {
-		// 		if (!file.dir && local.startsWith("courses/")) {
-		// 			//process data into sections
-		// 			filePromises.push(this.processJsonData(file));
-		// 		}
-		// 	});
-		// 	await Promise.all(filePromises);
-		//
-		// 	//all sections now in sectionDatasetArray
-		// 	//now make Dataset with id and DatasetArray
-		// 	const newDataset = new Dataset(id, this.sectionDatasetArray);
-		// 	await this.processor.saveToDisk(newDataset);
-		//
-		// 	//this.datasets.push(id);
-		// 	//now we just load the diskID after an add
-		// 	const diskDatasetID = await this.processor.getAllDatasetIds();
-		//
-		// 	return Promise.resolve(diskDatasetID);
-		// } catch (err) {
-		// 	return Promise.reject(new InsightError(`invalid content: ${err}`));
-		// }
-	}
-
-	public async processRoomKind(id: string, content: string): Promise<string[]> {
-		const zip = new JSZip();
-		const data = await zip.loadAsync(content, { base64: true });
-		const parse5 = require("parse5");
-		const indexFile = data.file("index.htm");
-
-		//no index file
-		if (!indexFile) {
-			throw new InsightError("Index.htm file not present");
-		}
-
-		//need to find first VALID table
-		const indexFileContent = await indexFile.async("text");
-		const parsedDoc = parse5.parse(indexFileContent);
-
-		const validTable = this.firstValidTable(parsedDoc);
-
-		if (!validTable) {
-			throw new InsightError("No valid table!");
-		}
-
-		const buildings = await this.parseBuildings(validTable);
-		//all buildings have now been added and their relevant data
-
-		//next map building to Room data
-
-		return [];
-	}
-
-	//Gemini adopted code to creat a building from table entry
-	public async parseBuildings(buildingTable: any): Promise<any> {
-		const rows = this.findByName(buildingTable, "tr");
-
-		const buildings = await Promise.all(rows.map(async (row) => this.parseBuildingRow(row)));
-
-		return buildings.filter((building) => building !== null);
-	}
-
-	public async parseBuildingRow(row: any): Promise<any> {
-		const titleCell = this.findCell(row, "views-field-title");
-		const addressCell = this.findCell(row, "views-field-field-building-address");
-
-		if (titleCell && addressCell) {
-			const fullname = this.getFullname(titleCell);
-			const link = this.getLink(titleCell);
-			const shortname = this.getShortName(link);
-			const href = link ? link.attrs.find((attr: any) => attr.name === "href")?.value.replace("./", "") : null;
-			const address = this.getAddress(addressCell);
-
-			try {
-				// Fetch geolocation
-				const geoResponse = await this.fetchGeolocation(address);
-
-				// Check if there was an error in fetching geolocation
-				if (geoResponse.error) {
-					return null;
-				}
-
-				return {
-					fullname: fullname,
-					shortname: shortname,
-					address: address,
-					lat: geoResponse.lat,
-					lon: geoResponse.lon,
-					buildinghref: href,
-				};
-			} catch (e) {
-				throw new InsightError(`invalid GeoLocation: ${e}`);
-			}
-		}
-		return null;
-	}
-
-	public getLink(cell: any): any {
-		const links = this.findByName(cell, "a");
-		if (links.length > 0) {
-			return links[0];
-		}
-		return null;
-	}
-	//gemini adapted to get shortName from the link -- prompt from inspect element
-	public getShortName(link: any): string | null {
-		if (link?.attrs) {
-			const href = link.attrs.find((attr: any) => attr.name === "href")?.value;
-			if (href) {
-				const match = href.match(/\/([A-Z]+)\.htm/); // Extract the shortname from the href
-				if (match?.[1]) {
-					return match[1];
-				}
-			}
-		}
-		return null;
-	}
-
-	//gemini consulted code
-	public getFullname(cell: any): string {
-		let fullname = "";
-		if (cell.childNodes) {
-			for (const childNode of cell.childNodes) {
-				if (childNode.nodeName === "a") {
-					// Extract text content directly from the <a> tag
-					if (childNode.childNodes) {
-						for (const textNode of childNode.childNodes) {
-							if (textNode.nodeName === "#text") {
-								fullname += textNode.value.trim();
-							}
-						}
-					}
-					break; // Assuming there's only one <a> tag with the full name
-				}
-			}
-		}
-		return fullname;
-	}
-
-	public getAddress(cell: any): string {
-		let address = "";
-		if (cell.childNodes) {
-			for (const textNode of cell.childNodes) {
-				if (textNode.nodeName === "#text") {
-					address += textNode.value.trim();
-				}
-			}
-		}
-		return address;
-	}
-
-	public findCell(row: any, text: string): any {
-		return this.findByName(row, "td").find((cell) => {
-			const classAttr = cell.attrs?.find((attr: any) => attr.name === "class");
-			return classAttr?.value.split(" ").includes(text);
-		});
-	}
-
-	//function to check that Table exists and is valid
-	public firstValidTable(doc: string): any {
-		//first check that table exists
-		const allTables = this.findByName(doc, "table");
-		for (const table of allTables) {
-			if (this.hasValidBuilding(table)) {
-				return table;
-			}
-		}
-		return null;
-	}
-
-	//Function to retrieve the cells with TD tag and verify the presence of the two fields we need as
-	//described in the spec
-	public hasValidBuilding(table: any): boolean {
-		const cells = this.findByName(table, "td");
-		let viewsFieldTitle = false;
-		let buildingAddress = false;
-
-		for (const cell of cells) {
-			const classAttribute = cell.attrs?.find((attr: any) => attr.name === "class");
-			if (classAttribute) {
-				const cellClasses = classAttribute.value.split(" ");
-				if (cellClasses.includes("views-field") && cellClasses.includes("views-field-title")) {
-					viewsFieldTitle = true;
-				}
-				if (cellClasses.includes("views-field") && cellClasses.includes("views-field-field-building-address")) {
-					buildingAddress = true;
-				}
-			}
-		}
-
-		if (viewsFieldTitle && buildingAddress) {
-			return true; // Found a valid row with both classes
-		}
-		return false;
-	}
-
-	//recursive function to add "table" tag to array -- adapted from Gemini
-	public findByName(doc: any, text: string): any[] {
-		const tables: any[] = [];
-		if (doc.tagName === text) {
-			tables.push(doc);
-		}
-
-		if (doc.childNodes && Array.isArray(doc.childNodes)) {
-			for (const child of doc.childNodes) {
-				tables.push(...this.findByName(child, text));
-			}
-		}
-		return tables;
 	}
 
 	public async processSectionKind(id: string, content: string): Promise<string[]> {
@@ -274,7 +48,7 @@ export default class InsightFacade implements IInsightFacade {
 		try {
 			this.sectionDatasetArray = [];
 			const zip = new JSZip();
-			const zipResult = await zip.loadAsync(content, { base64: true });
+			const zipResult = await zip.loadAsync(content, {base64: true});
 
 			this.validZip(zipResult);
 
@@ -450,7 +224,7 @@ export default class InsightFacade implements IInsightFacade {
 		for (const dataset of allData) {
 			insightData.push({
 				id: dataset.getId(),
-				kind: InsightDatasetKind.Sections,
+				kind: dataset.getKind(),
 				numRows: dataset.getSections().length,
 			});
 		}
@@ -471,12 +245,5 @@ export default class InsightFacade implements IInsightFacade {
 		} catch {
 			return false; // If decoding fails, it's not valid base64.
 		}
-	}
-
-	public async fetchGeolocation(address: string): Promise<any> {
-		const encodedAddress = encodeURIComponent(address); // URL-encode the address
-		const url = `http://cs310.students.cs.ubc.ca:11316/api/v1/project_team180/${encodedAddress}`;
-		const response = await fetch(url);
-		return await response.json();
 	}
 }

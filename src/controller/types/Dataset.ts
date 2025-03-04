@@ -16,6 +16,10 @@ export class Dataset {
 		return this.id;
 	}
 
+	public getKind():InsightDatasetKind{
+		return this.kind;
+	}
+
 	public getSections(): Section[] {
 		return [...this.sections]; // Return a copy to prevent modification
 	}
