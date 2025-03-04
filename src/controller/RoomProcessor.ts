@@ -38,7 +38,7 @@ export class RoomProcessor {
 		await Promise.all(
 			buildings.map(async (building: any) => {
 				const room = await this.parseBuildingRooms(building, data);
-				allRooms.push(...room);
+				allRooms.push(room);
 			})
 		);
 		{
@@ -79,13 +79,13 @@ export class RoomProcessor {
 		return buildings.filter((building) => building !== null);
 	}
 
-	public async parseRooms(roomsTable: any, building: any): Promise<any> {
-		const rows = this.findByName(roomsTable, "tr");
+	public parseRooms(roomsTable: any, building: any): any[] {
+		const rows = this.findByName(roomsTable, "tbody");
 
-		return rows.map(async (row) => this.parseRoomRow(row, building)).filter((room) => room !== null);
+		return rows.map((row) => this.parseRoomRow(row, building)).filter((room) => room !== null);
 	}
 
-	public async parseRoomRow(row: any, building: any): Promise<any> {
+	public parseRoomRow(row: any, building: any): Room {
 		let number = this.getContent(row, "views-field-field-room-number");
 		const seats = this.getContent(row, "views-field-field-room-capacity");
 		let furniture = this.getContent(row, "views-field-field-room-furniture");
@@ -118,7 +118,7 @@ export class RoomProcessor {
 			);
 			return room;
 		}
-		return null;
+		throw new InsightError();
 	}
 	public getContent(row: any, className: string): string | null {
 		const parse5 = require("parse5");
@@ -299,7 +299,7 @@ export class RoomProcessor {
 			const classAttribute = cell.attrs?.find((attr: any) => attr.name === "class");
 			if (classAttribute) {
 				const cellClasses = classAttribute.value.split(" ");
-				if (cellClasses.includes("views-field") && cellClasses.includes("view-field-field-room-number")) {
+				if (cellClasses.includes("views-field") && cellClasses.includes("views-field-field-room-number")) {
 					roomNum = true;
 				}
 				if (cellClasses.includes("views-field") && cellClasses.includes("views-field-field-room-capacity")) {

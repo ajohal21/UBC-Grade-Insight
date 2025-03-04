@@ -647,7 +647,7 @@ describe("InsightFacade", function () {
 			await facade.addDataset("aman", campus, InsightDatasetKind.Rooms);
 			const result = await facade.listDatasets();
 			//expect(result).to.be.an("array");
-			expect(result).to.deep.equal([{ id: "aman", kind: InsightDatasetKind.Sections, numRows: 64612 }]);
+			expect(result).to.deep.equal([{ id: "aman", kind: InsightDatasetKind.Rooms, numRows: 74 }]);
 		});
 
 		it("should list dataset as an array with /", async function () {

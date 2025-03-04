@@ -3,6 +3,7 @@ import path from "path"; // For handling file paths
 import { Dataset } from "./types/Dataset";
 import { Section } from "./types/Section";
 import { InsightDatasetKind, InsightError } from "./IInsightFacade";
+import { Room } from "./types/Room";
 
 export class DatasetProcessor {
 	private storagePath: string;
@@ -92,28 +93,38 @@ export class DatasetProcessor {
 					const parsed = JSON.parse(data);
 
 					const id = parsed.id;
-					const sections = parsed.sections.map((s: any) => {
-						const uuid = s.uuid;
-						//const id = s.id;
-						const title = s.title;
-						const instructor = s.instructor;
-						const dept = s.dept;
-						const year = s.year;
-						const avg = s.avg;
-						const pass = s.pass;
-						const fail = s.fail;
-						const audit = s.audit;
+					const kind = parsed.kind;
 
-						return new Section(uuid, id, title, instructor, dept, year, avg, pass, fail, audit);
-					});
-
-					return new Dataset(id, sections, InsightDatasetKind.Sections);
+					if (kind === InsightDatasetKind.Sections) {
+						return this.parseSectionsDataset(id, parsed.sections);
+					} else if (kind === InsightDatasetKind.Rooms) {
+						return this.parseRoomsDataset(id, parsed.rooms);
+					} else {
+						// Handle invalid kind if necessary
+						throw new InsightError(`Invalid dataset kind: ${kind}`);
+					}
 				});
 
-			return Promise.all(datasetPromises); // Wait for all datasets to be loaded
-		} catch (error) {
-			throw new InsightError(`Failed to retrieve datasets: ${error}`);
+			return Promise.all(datasetPromises);
+		} catch (err) {
+			throw new InsightError("error" + err);
 		}
+	}
+
+	private async parseSectionsDataset(id: string, sectionsData: any): Promise<Dataset> {
+		const sections = sectionsData.map((s: any) => {
+			const { uuid, ids, title, instructor, dept, year, avg, pass, fail, audit } = s;
+			return new Section(uuid, ids, title, instructor, dept, year, avg, pass, fail, audit);
+		});
+		return new Dataset(id, sections, InsightDatasetKind.Sections);
+	}
+
+	private async parseRoomsDataset(id: string, roomsData: any): Promise<Dataset> {
+		const rooms = roomsData.map((r: any) => {
+			const { fullname, shortname, number, name, address, lat, lon, seats, type, furniture, href } = r;
+			return new Room(fullname, shortname, number, name, address, lat, lon, seats, type, furniture, href);
+		});
+		return new Dataset(id, rooms, InsightDatasetKind.Rooms);
 	}
 
 	public async getAllDatasetIds(): Promise<string[]> {
