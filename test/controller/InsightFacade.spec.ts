@@ -26,7 +26,6 @@ describe("InsightFacade", function () {
 	let facade: IInsightFacade;
 
 	let sections: string;
-	//file that is not base64 zipped
 
 	//zip that does not have courses folder as root
 	let notCourses: string;
@@ -791,6 +790,11 @@ describe("InsightFacade", function () {
 		it("[valid/validDoubleNotNegatingThemselves.json] valid double not negating themselves", checkQuery);
 		it("[valid/validSortingWithStringTypeColumn.json] valid sorting with string type column", checkQuery);
 		it("[valid/validANDORGTLTEQISNOTWILDCARD.json] valid AND OR GT LT EQ IS NOT WILDCARD", checkQuery);
+
+		// C2 tests
+		it("[valid/order_by_ins_and_dept.json] valid sort down by two columns", checkQuery);
+		it("[valid/order_by_ins_and_dept_up.json] valid sort up by two columns", checkQuery);
+		it("[valid/use_rooms.json] test using rooms datatype", checkQuery);
 
 		//Invalid
 		it("[invalid/invalid.json] Query missing WHERE", checkQuery);
