@@ -1,8 +1,8 @@
 import fs from "fs-extra";
 import path from "path"; // For handling file paths
-import { Dataset } from "./types/Dataset";
-import { Section } from "./types/Section";
-import { InsightError } from "./IInsightFacade";
+import {Dataset} from "./types/Dataset";
+import {Section} from "./types/Section";
+import {InsightDatasetKind, InsightError} from "./IInsightFacade";
 
 export class DatasetProcessor {
 	private storagePath: string;
@@ -43,7 +43,7 @@ export class DatasetProcessor {
 
 						return new Section(uuid, id, title, instructor, dept, year, avg, pass, fail, audit);
 					});
-					resolve(new Dataset(datasetId, sections));
+					resolve(new Dataset(datasetId, sections, InsightDatasetKind.Sections));
 				} catch {
 					reject(new InsightError(`Failed to parse dataset.`));
 				}
@@ -107,7 +107,7 @@ export class DatasetProcessor {
 						return new Section(uuid, id, title, instructor, dept, year, avg, pass, fail, audit);
 					});
 
-					return new Dataset(id, sections);
+					return new Dataset(id, sections, InsightDatasetKind.Sections);
 				});
 
 			return Promise.all(datasetPromises); // Wait for all datasets to be loaded

@@ -6,11 +6,11 @@ import {
 	InsightResult,
 	NotFoundError,
 } from "./IInsightFacade";
-import { DatasetProcessor } from "./DatasetProcessor";
+import {DatasetProcessor} from "./DatasetProcessor";
 import JSZip from "jszip";
-import { Section } from "./types/Section";
-import { Dataset } from "./types/Dataset";
-import { QueryEngine } from "./QueryEngine";
+import {Section} from "./types/Section";
+import {Dataset} from "./types/Dataset";
+import {QueryEngine} from "./QueryEngine";
 import fs from "fs-extra";
 import path from "path";
 
@@ -27,15 +27,106 @@ export default class InsightFacade implements IInsightFacade {
 
 	public async addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
 		this.validDatasetID(id);
+		if (await this.processor.doesDatasetExist(id)) {
+			throw new InsightError("dataset with id already exists");
+		}
+
+		if (kind === InsightDatasetKind.Rooms){
+			//processRoom
+		} else {
+			return this.processSectionKind(id, content);
+		}
+		return Promise.resolve([]);
+
+		// if (!this.isBase64(content)) {
+		// 	throw new InsightError("Not base64 string");
+		// }
+		// //call load to see if the ID is present
+		// //is it better to load All or load the specific ID...
+		//
+		// if (await this.processor.doesDatasetExist(id)) {
+		// 	throw new InsightError("dataset with id already exists");
+		// }
+		//
+		// try {
+		// 	this.sectionDatasetArray = [];
+		// 	const zip = new JSZip();
+		// 	const zipResult = await zip.loadAsync(content, { base64: true });
+		//
+		// 	this.validZip(zipResult);
+		//
+		// 	const filePromises: Promise<void>[] = [];
+		// 	zip.forEach((local, file) => {
+		// 		if (!file.dir && local.startsWith("courses/")) {
+		// 			//process data into sections
+		// 			filePromises.push(this.processJsonData(file));
+		// 		}
+		// 	});
+		// 	await Promise.all(filePromises);
+		//
+		// 	//all sections now in sectionDatasetArray
+		// 	//now make Dataset with id and DatasetArray
+		// 	const newDataset = new Dataset(id, this.sectionDatasetArray);
+		// 	await this.processor.saveToDisk(newDataset);
+		//
+		// 	//this.datasets.push(id);
+		// 	//now we just load the diskID after an add
+		// 	const diskDatasetID = await this.processor.getAllDatasetIds();
+		//
+		// 	return Promise.resolve(diskDatasetID);
+		// } catch (err) {
+		// 	return Promise.reject(new InsightError(`invalid content: ${err}`));
+		// }
+	}
+
+	public async processRoomKind(id: string, content: string): Promise<string[]> {
+
+
+		const zip = new JSZip();
+		const data = await zip.loadAsync(content, { base64: true });
+		const parse5 = require("parse5");
+		const indexFile = data.file("index.htm");
+
+		//no index file
+		if(!indexFile) {
+			throw new InsightError("Index.htm file not present");
+		}
+
+		//need to find first VALID table
+		const parsedDoc = parse5.parse((indexFile));
+
+		const validTable = firstValidTable(parsedDoc)
+		//first find all tables
+	}
+
+	//function to check that Table exists and is valid
+	public async firstValidTable(doc:string) : any {
+		//first check that table exists
+		const allTables = this.findAllTables(doc);
+
+	}
+
+	//recursive function to add "table" tag to array -- adapted from Gemini
+	public async findAllTables(doc:any): any[] {
+		const tables: any[] = [];
+		if(doc.tagName === "table") {
+			tables.push(doc);
+		}
+
+		if(doc.childNodes && Array.isArray(doc.childNodes)) {
+			for (const child of doc.childNodes) {
+				tables.push(...this.findAllTables(child));
+			}
+		}
+		return tables;
+
+
+	}
+
+	public async processSectionKind(id: string, content: string): Promise<string[]> {
 
 		if (!this.isBase64(content)) {
 			throw new InsightError("Not base64 string");
-		}
-		//call load to see if the ID is present
-		//is it better to load All or load the specific ID...
-
-		if (await this.processor.doesDatasetExist(id)) {
-			throw new InsightError("dataset with id already exists");
 		}
 
 		try {
@@ -48,26 +139,26 @@ export default class InsightFacade implements IInsightFacade {
 			const filePromises: Promise<void>[] = [];
 			zip.forEach((local, file) => {
 				if (!file.dir && local.startsWith("courses/")) {
-					//process data into sections
+					// process data into sections
 					filePromises.push(this.processJsonData(file));
 				}
 			});
 			await Promise.all(filePromises);
 
-			//all sections now in sectionDatasetArray
-			//now make Dataset with id and DatasetArray
-			const newDataset = new Dataset(id, this.sectionDatasetArray);
+			// all sections now in sectionDatasetArray
+			// now make Dataset with id and DatasetArray
+			const newDataset = new Dataset(id, this.sectionDatasetArray, InsightDatasetKind.Sections);
 			await this.processor.saveToDisk(newDataset);
 
-			//this.datasets.push(id);
-			//now we just load the diskID after an add
+			// now we just load the diskID after an add
 			const diskDatasetID = await this.processor.getAllDatasetIds();
 
-			return Promise.resolve(diskDatasetID);
+			return diskDatasetID;
 		} catch (err) {
 			return Promise.reject(new InsightError(`invalid content: ${err}`));
 		}
 	}
+
 
 	/**
 	 * Check that the file unzipped has

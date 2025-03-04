@@ -6,10 +6,10 @@ export class Dataset {
 	private readonly sections: Section[];
 	private readonly kind: InsightDatasetKind;
 
-	constructor(id: string, sections: Section[] = []) {
+	constructor(id: string, sections: Section[] = [], kind: InsightDatasetKind) {
 		this.id = id;
 		this.sections = sections;
-		this.kind = InsightDatasetKind.Sections;
+		this.kind = kind;
 	}
 
 	public getId(): string {

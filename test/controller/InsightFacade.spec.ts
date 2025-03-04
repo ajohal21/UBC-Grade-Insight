@@ -8,9 +8,9 @@ import {
 } from "../../src/controller/IInsightFacade";
 //
 import InsightFacade from "../../src/controller/InsightFacade";
-import { clearDisk, getContentFromArchives, loadTestQuery } from "../TestUtil";
+import {clearDisk, getContentFromArchives, loadTestQuery} from "../TestUtil";
 
-import { expect, use } from "chai";
+import {expect, use} from "chai";
 import chaiAsPromised from "chai-as-promised";
 
 use(chaiAsPromised);
@@ -65,6 +65,35 @@ describe("InsightFacade", function () {
 			await clearDisk();
 		});
 
+		it("should reject with an empty dataset id - Rooms", async function () {
+			// Read the "Free Mutant Walkthrough" in the spec for tips on how to get started!
+			let err: any;
+
+			try {
+				await facade.addDataset("", sections, InsightDatasetKind.Rooms);
+				expect.fail("Expected Fail here!");
+			} catch (error) {
+				err = error;
+			}
+			expect(err).to.be.instanceOf(InsightError);
+		});
+
+		it("should reject with an dataset ID with an underscore -- Rooms", async function () {
+			let err: any;
+			try {
+				await facade.addDataset("6983_", sections, InsightDatasetKind.Rooms);
+				expect.fail("Expected Fail because of underscore");
+			} catch (error) {
+				err = error;
+			}
+			expect(err).to.be.instanceOf(InsightError);
+		});
+
+		it("should successfully add a dataset -- Rooms", async function () {
+			const result = await facade.addDataset("aman", course, InsightDatasetKind.Rooms);
+			return expect(result).to.have.members(["aman"]);
+		});
+
 		it("should reject with  an empty dataset id", async function () {
 			// Read the "Free Mutant Walkthrough" in the spec for tips on how to get started!
 			let err: any;
@@ -103,6 +132,23 @@ describe("InsightFacade", function () {
 		it("should successfully add a dataset", async function () {
 			const result = await facade.addDataset("aman", course, InsightDatasetKind.Sections);
 			return expect(result).to.have.members(["aman"]);
+		});
+
+		it("should successfully add a dataset clear disk, add have just the one", async function () {
+			await facade.addDataset("aman", course, InsightDatasetKind.Sections);
+			const result = await facade.addDataset("kylee", course, InsightDatasetKind.Sections);
+			expect(result).to.have.members(["aman", 'kylee']);
+			const newFacade = new InsightFacade();
+			const res = await newFacade.listDatasets()
+			expect(res.length).to.equal(2);
+			await clearDisk();
+			const rez = await newFacade.listDatasets()
+			expect(rez.length).to.equal(0);
+
+			const r = await newFacade.addDataset("aman", course, InsightDatasetKind.Sections);
+			expect(r).to.have.members(["aman"]);
+
+
 		});
 
 		it("should successfully add a dataset with / in name", async function () {
@@ -495,6 +541,22 @@ describe("InsightFacade", function () {
 			expect(result).to.have.deep.members([{ id: "aj21", kind: InsightDatasetKind.Sections, numRows: 64612 }]);
 		});
 
+		it("should list dataset after add, new facade and second add", async function () {
+			await facade.addDataset("aman", sections, InsightDatasetKind.Sections);
+
+			await facade.addDataset("kylee", sections, InsightDatasetKind.Sections);
+			const facade2: InsightFacade = new InsightFacade();
+			await facade2.addDataset("aj21", sections, InsightDatasetKind.Sections);
+
+
+			const facade3: InsightFacade = new InsightFacade();
+			const result = await facade3.listDatasets();
+			//expect(result).to.be.an("array");
+			expect(result).to.have.deep.members([{ id: "aj21", kind: InsightDatasetKind.Sections, numRows: 64612 },
+				{ id: "kylee", kind: InsightDatasetKind.Sections, numRows: 64612 },
+				{ id: "aman", kind: InsightDatasetKind.Sections, numRows: 64612 }]);
+		});
+
 		it("should list dataset as an array", async function () {
 			await facade.addDataset("aman", sections, InsightDatasetKind.Sections);
 			const result = await facade.listDatasets();
@@ -536,6 +598,10 @@ describe("InsightFacade", function () {
 				const res = await facade.listDatasets();
 				expect(res).to.be.instanceof(Array);
 				expect(res.length).to.equal(0);
+				await facade.addDataset("aman", sections, InsightDatasetKind.Sections);
+				const res2 = await facade.listDatasets();
+				expect(res2).to.be.instanceof(Array);
+				expect(res2.length).to.equal(1);
 			} catch (err) {
 				expect(err).to.be.instanceOf(InsightError);
 			}
