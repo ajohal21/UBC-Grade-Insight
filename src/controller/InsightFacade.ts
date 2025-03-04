@@ -6,11 +6,11 @@ import {
 	InsightResult,
 	NotFoundError,
 } from "./IInsightFacade";
-import {DatasetProcessor} from "./DatasetProcessor";
+import { DatasetProcessor } from "./DatasetProcessor";
 import JSZip from "jszip";
-import {Section} from "./types/Section";
-import {Dataset} from "./types/Dataset";
-import {QueryEngine} from "./QueryEngine";
+import { Section } from "./types/Section";
+import { Dataset } from "./types/Dataset";
+import { QueryEngine } from "./QueryEngine";
 import fs from "fs-extra";
 import path from "path";
 
@@ -31,7 +31,7 @@ export default class InsightFacade implements IInsightFacade {
 			throw new InsightError("dataset with id already exists");
 		}
 
-		if (kind === InsightDatasetKind.Rooms){
+		if (kind === InsightDatasetKind.Rooms) {
 			//processRoom
 		} else {
 			return this.processSectionKind(id, content);
@@ -80,51 +80,49 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public async processRoomKind(id: string, content: string): Promise<string[]> {
-
-
 		const zip = new JSZip();
 		const data = await zip.loadAsync(content, { base64: true });
 		const parse5 = require("parse5");
 		const indexFile = data.file("index.htm");
 
 		//no index file
-		if(!indexFile) {
+		if (!indexFile) {
 			throw new InsightError("Index.htm file not present");
 		}
 
 		//need to find first VALID table
-		const parsedDoc = parse5.parse((indexFile));
+		const parsedDoc = parse5.parse(indexFile);
 
-		const validTable = firstValidTable(parsedDoc)
+		const validTable = this.firstValidTable(parsedDoc);
 		//first find all tables
+
+		return []; // KYLEE NOTE: added return statement here
 	}
 
 	//function to check that Table exists and is valid
-	public async firstValidTable(doc:string) : any {
+	public async firstValidTable(doc: string): Promise<any> {
+		// KYLEE NOTE:  made this Promise<any> to compile
 		//first check that table exists
 		const allTables = this.findAllTables(doc);
-
 	}
 
 	//recursive function to add "table" tag to array -- adapted from Gemini
-	public async findAllTables(doc:any): any[] {
+	public async findAllTables(doc: any): Promise<any[]> {
 		const tables: any[] = [];
-		if(doc.tagName === "table") {
+		if (doc.tagName === "table") {
 			tables.push(doc);
 		}
 
-		if(doc.childNodes && Array.isArray(doc.childNodes)) {
+		if (doc.childNodes && Array.isArray(doc.childNodes)) {
 			for (const child of doc.childNodes) {
-				tables.push(...this.findAllTables(child));
+				const childTables = await this.findAllTables(child); // KYLEE NOTE: added await here before pushing
+				tables.push(...childTables);
 			}
 		}
 		return tables;
-
-
 	}
 
 	public async processSectionKind(id: string, content: string): Promise<string[]> {
-
 		if (!this.isBase64(content)) {
 			throw new InsightError("Not base64 string");
 		}
@@ -158,7 +156,6 @@ export default class InsightFacade implements IInsightFacade {
 			return Promise.reject(new InsightError(`invalid content: ${err}`));
 		}
 	}
-
 
 	/**
 	 * Check that the file unzipped has
@@ -310,7 +307,7 @@ export default class InsightFacade implements IInsightFacade {
 			insightData.push({
 				id: dataset.getId(),
 				kind: InsightDatasetKind.Sections,
-				numRows: dataset.getSections().length,
+				numRows: dataset.getContent().length,
 			});
 		}
 		return insightData;
