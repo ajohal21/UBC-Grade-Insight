@@ -7,6 +7,31 @@ import { InsightError, InsightResult, ResultTooLargeError } from "./IInsightFaca
 
 export class QueryEngine {
 	private limit: number = 5000;
+	private validKeys = new Set([
+		// Section keys
+		"avg",
+		"pass",
+		"fail",
+		"audit",
+		"year",
+		"dept",
+		"instructor",
+		"title",
+		"uuid",
+		"id",
+		// Room keys
+		"fullname",
+		"shortname",
+		"number",
+		"name",
+		"address",
+		"lat",
+		"lon",
+		"seats",
+		"type",
+		"furniture",
+		"href",
+	]);
 
 	/**
 	 * Retrieves the value of a specific field from a Section object.
@@ -88,38 +113,13 @@ export class QueryEngine {
 	private extractDatasetIds(obj: any, datasetIds: Set<string>): void {
 		if (typeof obj !== "object" || obj === null) return;
 
-		// const validKeys = new Set(["avg", "pass", "fail", "audit", "year", "dept", "instructor", "title", "uuid", "id"]);
-		const validKeys = new Set([
-			"avg",
-			"pass",
-			"fail",
-			"audit",
-			"year",
-			"dept",
-			"instructor",
-			"title",
-			"uuid",
-			"id", // Section fields
-			"fullname",
-			"shortname",
-			"number",
-			"name",
-			"address",
-			"lat",
-			"lon",
-			"seats",
-			"type",
-			"furniture",
-			"href", // Room fields
-		]);
-
 		for (const key in obj) {
 			if (key.includes("_")) {
 				const datasetId = key.split("_")[0];
 				datasetIds.add(datasetId);
 
 				const queryKey = key.split("_")[1];
-				if (!validKeys.has(queryKey)) {
+				if (!this.validKeys.has(queryKey)) {
 					throw new InsightError(`Invalid query key '${queryKey}'.`);
 				}
 			}
@@ -209,11 +209,10 @@ export class QueryEngine {
 		condition: Record<string, any>,
 		content: Section | Room
 	): boolean {
-		const datasetKey = Object.keys(condition)[0]; // "sections_avg"
-		const column = datasetKey.split("_")[1]; // Extract "avg"
-		const value = condition[datasetKey]; // the value
+		const datasetKey = Object.keys(condition)[0];
+		const column = datasetKey.split("_")[1];
+		const value = condition[datasetKey];
 
-		// Get the actual value from this Section or Room
 		let contentValue: string | number;
 		if (content instanceof Section) {
 			contentValue = this.getSectionValue(content, datasetKey);
@@ -221,7 +220,13 @@ export class QueryEngine {
 			contentValue = this.getRoomValue(content, datasetKey);
 		}
 
-		if (operator !== "IS" && typeof contentValue !== "number") {
+		// Use a helper function for the "IS" operator
+		if (operator === "IS") {
+			return this.handleISComparator(column, contentValue, value);
+		}
+
+		// Handle numeric comparators
+		if (typeof contentValue !== "number") {
 			throw new InsightError(`Invalid query: '${column}' must be a numeric field for '${operator}' operator.`);
 		}
 
@@ -232,23 +237,24 @@ export class QueryEngine {
 				return contentValue < value;
 			case "EQ":
 				return contentValue === value;
-			case "IS":
-				if (typeof contentValue !== "string" || typeof value !== "string") {
-					throw new InsightError(`Invalid query: '${column}' must be a string field for 'IS' operator.`);
-				}
-
-				// Ensure '*' appears only at the start or end, or both
-				const middleWildcard = value.slice(1, -1).includes("*");
-				if (middleWildcard) {
-					throw new InsightError(`Invalid query: Wildcard '*' can only be at the beginning or end.`);
-				}
-
-				const regexPattern = "^" + value.replace(/\*/g, ".*") + "$";
-				const regex = new RegExp(regexPattern);
-				return regex.test(contentValue);
 			default:
 				throw new InsightError(`Invalid operator: '${operator}'.`);
 		}
+	}
+
+	private handleISComparator(column: string, contentValue: string | number, value: string): boolean {
+		if (typeof contentValue !== "string" || typeof value !== "string") {
+			throw new InsightError(`Invalid query: '${column}' must be a string field for 'IS' operator.`);
+		}
+
+		const middleWildcard = value.slice(1, -1).includes("*");
+		if (middleWildcard) {
+			throw new InsightError(`Invalid query: Wildcard '*' can only be at the beginning or end.`);
+		}
+
+		const regexPattern = "^" + value.replace(/\*/g, ".*") + "$";
+		const regex = new RegExp(regexPattern);
+		return regex.test(contentValue);
 	}
 
 	/**

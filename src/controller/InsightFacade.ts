@@ -141,23 +141,23 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	private processSection(field: any, year: number): Section | InsightError | null {
-		if (
-			field.id === undefined ||
-			field.Course === undefined ||
-			field.Title === undefined ||
-			field.Professor === undefined ||
-			field.Subject === undefined ||
-			year === undefined ||
-			field.Avg === undefined ||
-			field.Pass === undefined ||
-			field.Fail === undefined ||
-			field.Audit === undefined
-		) {
-			return new InsightError(`Missing required field(s) in section: ${JSON.stringify(field)}`);
+		const requiredFields = ["id", "Course", "Title", "Professor", "Subject", "Avg", "Pass", "Fail", "Audit"];
+
+		// Check for missing fields using a loop
+		for (const fieldName of requiredFields) {
+			if (field[fieldName] === undefined || field[fieldName] === null) {
+				return new InsightError(`Missing required field: ${fieldName}`);
+			}
+		}
+
+		// Check year separately
+		if (year === undefined || year === null) {
+			return new InsightError("Missing required field: year");
 		}
 
 		try {
-			const section = new Section(
+			// Create the Section object
+			return new Section(
 				field.id.toString(),
 				field.Course,
 				field.Title,
@@ -169,9 +169,8 @@ export default class InsightFacade implements IInsightFacade {
 				field.Fail,
 				field.Audit
 			);
-			return section;
 		} catch (e) {
-			return new InsightError(`Error creating section: ${e}`); // Wrap any section creation errors
+			return new InsightError(`Error creating section: ${e}`);
 		}
 	}
 

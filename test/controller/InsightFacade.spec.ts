@@ -79,7 +79,7 @@ describe("InsightFacade", function () {
 		});
 
 		afterEach(async function () {
-			await clearDisk();
+			//await clearDisk();
 		});
 
 		it("should reject with an empty dataset id - Rooms", async function () {
@@ -647,7 +647,7 @@ describe("InsightFacade", function () {
 			await facade.addDataset("aman", campus, InsightDatasetKind.Rooms);
 			const result = await facade.listDatasets();
 			//expect(result).to.be.an("array");
-			expect(result).to.deep.equal([{ id: "aman", kind: InsightDatasetKind.Sections, numRows: 64612 }]);
+			expect(result).to.deep.equal([{ id: "aman", kind: InsightDatasetKind.Rooms, numRows: 364 }]);
 		});
 
 		it("should list dataset as an array with /", async function () {
@@ -761,6 +761,7 @@ describe("InsightFacade", function () {
 			// Will *fail* if there is a problem reading ANY dataset.
 			const loadDatasetPromises: Promise<string[]>[] = [
 				facade.addDataset("sections", sections, InsightDatasetKind.Sections),
+				facade.addDataset("rooms", campus, InsightDatasetKind.Rooms),
 			];
 
 			try {
@@ -810,6 +811,7 @@ describe("InsightFacade", function () {
 		it("[valid/order_by_ins_and_dept.json] valid sort down by two columns", checkQuery);
 		it("[valid/order_by_ins_and_dept_up.json] valid sort up by two columns", checkQuery);
 		it("[valid/use_rooms.json] test using rooms datatype", checkQuery);
+		it("[valid/validPlainRoom.json] test using rooms to see plain output", checkQuery);
 
 		//Invalid
 		it("[invalid/invalid.json] Query missing WHERE", checkQuery);
