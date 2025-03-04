@@ -8,6 +8,7 @@ import { DatasetProcessor } from "./DatasetProcessor";
 export class RoomProcessor {
 	private processor = new DatasetProcessor("../../data/");
 
+	//code adapted from Sections processing with the aid of AI (gemini) to help with htm file node traversal
 	public async processRoomKind(id: string, content: string): Promise<string[]> {
 		const zip = new JSZip();
 		const data = await zip.loadAsync(content, { base64: true });
@@ -38,7 +39,7 @@ export class RoomProcessor {
 		await Promise.all(
 			buildings.map(async (building: any) => {
 				const room = await this.parseBuildingRooms(building, data);
-				allRooms.push(room);
+				allRooms.push(...room);
 			})
 		);
 		{
@@ -52,6 +53,7 @@ export class RoomProcessor {
 		}
 	}
 
+	//AI assisted code -- used to navigate sub folders
 	public async parseBuildingRooms(building: any, data: any): Promise<any[]> {
 		const parse5 = require("parse5");
 		const buildingFile = data.file(building.buildinghref);
@@ -70,7 +72,7 @@ export class RoomProcessor {
 		return this.parseRooms(buildingDoc, building);
 	}
 
-	//Gemini adopted code to creat a building from table entry
+	//Gemini adopted code to create a building from table entry
 	public async parseBuildings(buildingTable: any): Promise<any> {
 		const rows = this.findByName(buildingTable, "tr");
 
@@ -79,8 +81,10 @@ export class RoomProcessor {
 		return buildings.filter((building) => building !== null);
 	}
 
+	//AI assisted code to help navigate to the tr header which contains the relevant room data
 	public parseRooms(roomsTable: any, building: any): any[] {
-		const rows = this.findByName(roomsTable, "tbody");
+		const tableBody = this.findByName(roomsTable, "tbody")[0];
+		const rows = this.findByName(tableBody, "tr");
 
 		return rows.map((row) => this.parseRoomRow(row, building)).filter((room) => room !== null);
 	}
@@ -112,14 +116,15 @@ export class RoomProcessor {
 				building.lat,
 				building.lon,
 				seatsNum,
-				furniture,
 				type,
+				furniture,
 				href
 			);
 			return room;
 		}
 		throw new InsightError();
 	}
+	//gemini adapted code -- prompt to get text from tr tag
 	public getContent(row: any, className: string): string | null {
 		const parse5 = require("parse5");
 		const cell = this.findByName(row, "td").find((cel) => {
@@ -332,6 +337,7 @@ export class RoomProcessor {
 		return tables;
 	}
 
+	//AI assisted code
 	public async fetchGeolocation(address: string): Promise<any> {
 		const encodedAddress = encodeURIComponent(address); // URL-encode the address
 		const url = `http://cs310.students.cs.ubc.ca:11316/api/v1/project_team180/${encodedAddress}`;
