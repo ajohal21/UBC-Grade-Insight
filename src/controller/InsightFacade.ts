@@ -13,7 +13,7 @@ import { Dataset } from "./types/Dataset";
 import { QueryEngine } from "./QueryEngine";
 import fs from "fs-extra";
 import path from "path";
-import {RoomProcessor} from "./RoomProcessor";
+import { RoomProcessor } from "./RoomProcessor";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -48,7 +48,7 @@ export default class InsightFacade implements IInsightFacade {
 		try {
 			this.sectionDatasetArray = [];
 			const zip = new JSZip();
-			const zipResult = await zip.loadAsync(content, {base64: true});
+			const zipResult = await zip.loadAsync(content, { base64: true });
 
 			this.validZip(zipResult);
 
@@ -225,7 +225,7 @@ export default class InsightFacade implements IInsightFacade {
 			insightData.push({
 				id: dataset.getId(),
 				kind: dataset.getKind(),
-				numRows: dataset.getSections().length,
+				numRows: dataset.getContent().length,
 			});
 		}
 		return insightData;

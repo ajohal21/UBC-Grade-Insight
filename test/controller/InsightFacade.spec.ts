@@ -341,6 +341,14 @@ describe("InsightFacade", function () {
 			expect(result2).to.have.members(["aman", "aman2"]);
 		});
 
+		it("should successfully add a rooms and sections", async function () {
+			const result = await facade.addDataset("aman", campus, InsightDatasetKind.Rooms);
+			expect(result).to.have.members(["aman"]);
+			const result2 = await facade.addDataset("aman2", course, InsightDatasetKind.Sections);
+
+			expect(result2).to.have.members(["aman", "aman2"]);
+		});
+
 		it("should successfully add with ID that is any characters except underscore", async function () {
 			const result = await facade.addDataset("aman2133!?", course, InsightDatasetKind.Sections);
 			expect(result).to.have.members(["aman2133!?"]);
@@ -630,6 +638,13 @@ describe("InsightFacade", function () {
 
 		it("should list dataset as an array", async function () {
 			await facade.addDataset("aman", sections, InsightDatasetKind.Sections);
+			const result = await facade.listDatasets();
+			//expect(result).to.be.an("array");
+			expect(result).to.deep.equal([{ id: "aman", kind: InsightDatasetKind.Sections, numRows: 64612 }]);
+		});
+
+		it("should list dataset as an array - Rooms", async function () {
+			await facade.addDataset("aman", campus, InsightDatasetKind.Rooms);
 			const result = await facade.listDatasets();
 			//expect(result).to.be.an("array");
 			expect(result).to.deep.equal([{ id: "aman", kind: InsightDatasetKind.Sections, numRows: 64612 }]);

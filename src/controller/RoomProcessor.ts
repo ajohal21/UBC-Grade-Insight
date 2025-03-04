@@ -1,9 +1,12 @@
 import JSZip from "jszip";
-import {InsightError} from "./IInsightFacade";
+import { InsightDatasetKind, InsightError } from "./IInsightFacade";
+import { Room } from "./types/Room";
+import { Dataset } from "./types/Dataset";
+import { DatasetProcessor } from "./DatasetProcessor";
 //import parse5 from "parse5";
 
-
 export class RoomProcessor {
+	private processor = new DatasetProcessor("../../data/");
 
 	public async processRoomKind(id: string, content: string): Promise<string[]> {
 		const zip = new JSZip();
@@ -31,22 +34,25 @@ export class RoomProcessor {
 
 		//next map building to Room data
 
-		const roomPromises = buildings.map(async (building: any) => {
-			try {
-				// Call parseBuildingRooms to extract room data for the current building
-				const rooms = await this.parseBuildingRooms(building, data);
-				return rooms; // Return the extracted rooms
-			} catch (error) {
-				// Handle any errors that occur during room parsing for a building
-				throw new InsightError("Room error"+error);
-			}
-		});
-		// Wait for all promises to resolve
-		const allRooms = await Promise.all(roomPromises);
-		return allRooms;
+		const allRooms: any[] = [];
+		await Promise.all(
+			buildings.map(async (building: any) => {
+				const room = await this.parseBuildingRooms(building, data);
+				allRooms.push(...room);
+			})
+		);
+		{
+			const newDataset = new Dataset(id, allRooms, InsightDatasetKind.Rooms);
+			await this.processor.saveToDisk(newDataset);
+
+			// now we just load the diskID after an add
+			const diskDatasetID = await this.processor.getAllDatasetIds();
+
+			return diskDatasetID;
+		}
 	}
 
-	public async parseBuildingRooms(building: any, data: any): Promise<any[]>{
+	public async parseBuildingRooms(building: any, data: any): Promise<any[]> {
 		const parse5 = require("parse5");
 		const buildingFile = data.file(building.buildinghref);
 		if (!buildingFile) {
@@ -62,7 +68,6 @@ export class RoomProcessor {
 		}
 
 		return this.parseRooms(buildingDoc, building);
-
 	}
 
 	//Gemini adopted code to creat a building from table entry
@@ -74,33 +79,44 @@ export class RoomProcessor {
 		return buildings.filter((building) => building !== null);
 	}
 
-	public async parseRooms(roomsTable: any,building:any): Promise<any> {
+	public async parseRooms(roomsTable: any, building: any): Promise<any> {
 		const rows = this.findByName(roomsTable, "tr");
 
 		return rows.map(async (row) => this.parseRoomRow(row, building)).filter((room) => room !== null);
 	}
 
-	public async parseRoomRow(row: any, building:any): Promise<any> {
-		const number = this.getContent(row, "views-field-field-room-number");
+	public async parseRoomRow(row: any, building: any): Promise<any> {
+		let number = this.getContent(row, "views-field-field-room-number");
 		const seats = this.getContent(row, "views-field-field-room-capacity");
 		let furniture = this.getContent(row, "views-field-field-room-furniture");
-		const type = this.getContent(row, "views-field-field-room-type");
-		const href = this.getHref(row, "views-field-field-room-number");
+		let type = this.getContent(row, "views-field-field-room-type");
+		let href = this.getHref(row, "views-field-field-room-number");
 
 		if (furniture) {
 			furniture = furniture.replace(/&amp;/g, "&");
 		}
 
 		if (number && seats && furniture && type && href) {
-			return {
-				...building,
-				number: String(number.trim()),
-				name: building.shortname + "_" + number.trim(),
-				seats: Number(seats.trim()),
-				furniture: furniture.trim(),
-				type: type.trim(),
-				href: href.trim(),
-			};
+			const sname = building.shortname + "_" + number.trim();
+			number = String(number.trim());
+			const seatsNum = Number(seats.trim());
+			furniture = furniture.trim();
+			type = type.trim();
+			href = href.trim();
+			const room = new Room(
+				building.fullname,
+				building.shortname,
+				number,
+				sname,
+				building.address,
+				building.lat,
+				building.lon,
+				seatsNum,
+				furniture,
+				type,
+				href
+			);
+			return room;
 		}
 		return null;
 	}
@@ -113,7 +129,7 @@ export class RoomProcessor {
 		return cell ? parse5.serialize(cell).replace(/(<([^>]+)>)/gi, "") : null;
 	}
 
-// gemini referenced to get href from room tag -- this is the url we need
+	// gemini referenced to get href from room tag -- this is the url we need
 	public getHref(row: any, className: string): string | null {
 		const cell = this.findByName(row, "td").find((cel) => {
 			const classAttr = cel.attrs?.find((attr: any) => attr.name === "class");
@@ -127,7 +143,6 @@ export class RoomProcessor {
 		}
 		return null;
 	}
-
 
 	public async parseBuildingRow(row: any): Promise<any> {
 		const titleCell = this.findCell(row, "views-field-title");
@@ -269,7 +284,6 @@ export class RoomProcessor {
 		}
 
 		return viewsFieldTitle && buildingAddress;
-
 	}
 
 	//same code as above just for room info.
@@ -301,10 +315,7 @@ export class RoomProcessor {
 		}
 
 		return roomNum && capacity && furniture && type;
-
 	}
-
-
 
 	//recursive function to add "table" tag to array -- adapted from Gemini
 	public findByName(doc: any, text: string): any[] {

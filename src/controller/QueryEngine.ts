@@ -90,8 +90,27 @@ export class QueryEngine {
 
 		// const validKeys = new Set(["avg", "pass", "fail", "audit", "year", "dept", "instructor", "title", "uuid", "id"]);
 		const validKeys = new Set([
-			"avg", "pass", "fail", "audit", "year", "dept", "instructor", "title", "uuid", "id", // Section fields
-			"fullname", "shortname", "number", "name", "address", "lat", "lon", "seats", "type", "furniture", "href" // Room fields
+			"avg",
+			"pass",
+			"fail",
+			"audit",
+			"year",
+			"dept",
+			"instructor",
+			"title",
+			"uuid",
+			"id", // Section fields
+			"fullname",
+			"shortname",
+			"number",
+			"name",
+			"address",
+			"lat",
+			"lon",
+			"seats",
+			"type",
+			"furniture",
+			"href", // Room fields
 		]);
 
 		for (const key in obj) {
