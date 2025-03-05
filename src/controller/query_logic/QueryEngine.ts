@@ -43,7 +43,7 @@ export class QueryEngine {
 	 * @returns `true` if all subconditions are true, otherwise `false`.
 	 */
 	private handleAND(conditions: any[], content: Section | Room): boolean {
-		return conditions.every((subCondition) => this.evaluateCondition(subCondition, content));
+		return conditions.every((subCondition) => QueryHelper.evaluateCondition(subCondition, content));
 	}
 
 	/**
@@ -53,7 +53,7 @@ export class QueryEngine {
 	 * @returns `true` if at least one subcondition is true, otherwise `false`.
 	 */
 	private handleOR(conditions: any[], content: Section | Room): boolean {
-		return conditions.some((subCondition) => this.evaluateCondition(subCondition, content));
+		return conditions.some((subCondition) => QueryHelper.evaluateCondition(subCondition, content));
 	}
 
 	/**
@@ -83,7 +83,7 @@ export class QueryEngine {
 
 		// Use a helper function for the "IS" operator
 		if (operator === "IS") {
-			return this.handleISComparator(column, contentValue, value);
+			return QueryHelper.handleISComparator(contentValue, value);
 		}
 
 		// Handle numeric comparators
@@ -100,50 +100,6 @@ export class QueryEngine {
 				return contentValue === value;
 			default:
 				throw new InsightError(`Invalid operator: '${operator}'.`);
-		}
-	}
-
-	private handleISComparator(column: string, contentValue: string | number, value: string): boolean {
-		if (typeof contentValue !== "string" || typeof value !== "string") {
-			throw new InsightError(`Invalid query: '${column}' must be a string field for 'IS' operator.`);
-		}
-
-		const middleWildcard = value.slice(1, -1).includes("*");
-		if (middleWildcard) {
-			throw new InsightError(`Invalid query: Wildcard '*' can only be at the beginning or end.`);
-		}
-
-		const regexPattern = "^" + value.replace(/\*/g, ".*") + "$";
-		const regex = new RegExp(regexPattern);
-		return regex.test(contentValue);
-	}
-
-	/**
-	 * Recursively evaluates a WHERE condition on a section.
-	 * @param filter - The filter condition (e.g., "AND", "OR", "GT", "LT", "EQ", "IS").
-	 * @param content - The section or room to evaluate against the filter.
-	 * @returns `true` if the section satisfies the filter condition, otherwise `false`.
-	 * @throws InsightError if the filter contains an unsupported condition type.
-	 */
-	private evaluateCondition(filter: Record<string, any>, content: Section | Room): boolean {
-		// get the key (OR
-		// i.e., OR [{"GT": {"sections_avg": 97}},{"LT": {"sections_pass": 50}}]
-		const key = Object.keys(filter)[0];
-
-		switch (key) {
-			case "AND":
-				return this.handleAND(filter.AND, content);
-			case "OR":
-				return this.handleOR(filter.OR, content);
-			case "NOT":
-				return !this.evaluateCondition(filter.NOT, content);
-			case "GT":
-			case "LT":
-			case "EQ":
-			case "IS":
-				return this.handleComparator(key, filter[key], content);
-			default:
-				throw new InsightError(`Unsupported filter type: ${key}`);
 		}
 	}
 
@@ -166,11 +122,11 @@ export class QueryEngine {
 		if (datasetContent.length > 0) {
 			if (datasetContent[0] instanceof Section) {
 				return datasetContent.filter((content) => {
-					return this.evaluateCondition(where, content);
+					return QueryHelper.evaluateCondition(where, content);
 				}) as Section[];
 			} else if (datasetContent[0] instanceof Room) {
 				return datasetContent.filter((content) => {
-					return this.evaluateCondition(where, content);
+					return QueryHelper.evaluateCondition(where, content);
 				}) as Room[];
 			}
 		}
