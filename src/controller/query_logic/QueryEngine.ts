@@ -1,9 +1,12 @@
-import { Dataset } from "./types/Dataset";
-import { DatasetProcessor } from "./DatasetProcessor";
-import { Section } from "./types/Section";
-import { Room } from "./types/Room";
-import { Query } from "./types/Query";
-import { InsightError, InsightResult, ResultTooLargeError } from "./IInsightFacade";
+import { Dataset } from "../types/Dataset";
+import { DatasetProcessor } from "../DatasetProcessor";
+import { Section } from "../types/Section";
+import { Room } from "../types/Room";
+import { Query } from "../types/Query";
+import { SectionHelper } from "./SectionHelper";
+import { RoomHelper } from "./RoomHelper";
+import { QueryHelper } from "./QueryHelper";
+import { InsightError, InsightResult, ResultTooLargeError } from "../IInsightFacade";
 
 export class QueryEngine {
 	private limit: number = 5000;
@@ -32,148 +35,6 @@ export class QueryEngine {
 		"furniture",
 		"href",
 	]);
-
-	/**
-	 * Retrieves the value of a specific field from a Section object.
-	 * @param section - The Section instance containing course data.
-	 * @param key - The dataset-prefixed column name (e.g., "courses_avg").
-	 * @returns The corresponding field value as a string or number.
-	 * @throws InsightError if the key does not correspond to a valid section field.
-	 */
-	private getSectionValue(section: Section, key: string): string | number {
-		const fieldMap: Record<string, (s: Section) => string | number> = {
-			uuid: (s) => s.getUuid(),
-			id: (s) => s.getId(),
-			title: (s) => s.getTitle(),
-			instructor: (s) => s.getInstructor(),
-			dept: (s) => s.getDept(),
-			year: (s) => s.getYear(),
-			avg: (s) => s.getAvg(),
-			pass: (s) => s.getPass(),
-			fail: (s) => s.getFail(),
-			audit: (s) => s.getAudit(),
-		};
-
-		// Extract field name by removing dataset ID prefix (section_avg -> avg)
-		const fieldName = key.split("_")[1];
-
-		if (!fieldMap[fieldName]) {
-			throw new InsightError(`Column '${key}' not found in section.`);
-		}
-
-		const value = fieldMap[fieldName](section);
-		if (["avg", "pass", "fail", "audit", "year"].includes(fieldName)) {
-			return Number(value);
-		}
-		return String(value);
-	}
-
-	/**
-	 * Retrieves the value of a specific field from a Room object.
-	 * @param room - The Room instance containing room data.
-	 * @param key - The dataset-prefixed column name (e.g., "rooms_lat").
-	 * @returns The corresponding field value as a string or number.
-	 * @throws InsightError if the key does not correspond to a valid room field.
-	 */
-	private getRoomValue(room: Room, key: string): string | number {
-		const fieldMap: Record<string, (r: Room) => string | number> = {
-			fullname: (r) => r.getFullname(),
-			shortname: (r) => r.getShortname(),
-			number: (r) => r.getNumber(),
-			name: (r) => r.getName(),
-			address: (r) => r.getAddress(),
-			lat: (r) => r.getLat(),
-			lon: (r) => r.getLon(),
-			seats: (r) => r.getSeats(),
-			type: (r) => r.getType(),
-			furniture: (r) => r.getFurniture(),
-			href: (r) => r.getHref(),
-		};
-
-		// Extract field name by removing dataset ID prefix (rooms_lat -> lat)
-		const fieldName = key.split("_")[1];
-
-		if (!fieldMap[fieldName]) {
-			throw new InsightError(`Column '${key}' not found in room.`);
-		}
-
-		const value = fieldMap[fieldName](room);
-		if (["lat", "lon", "seats"].includes(fieldName)) {
-			return Number(value); // Return numeric values for lat, lon, and seats
-		}
-		return String(value); // Return string for other fields
-	}
-
-	/**
-	 * Recursively extracts dataset IDs from query filters.
-	 * @param obj - The query object containing filtering conditions.
-	 * @param datasetIds - A set to store extracted dataset IDs.
-	 * @throws InsightError if an invalid query key is encountered.
-	 */
-	private extractDatasetIds(obj: any, datasetIds: Set<string>): void {
-		if (typeof obj !== "object" || obj === null) return;
-
-		for (const key in obj) {
-			if (key.includes("_")) {
-				const datasetId = key.split("_")[0];
-				datasetIds.add(datasetId);
-
-				const queryKey = key.split("_")[1];
-				if (!this.validKeys.has(queryKey)) {
-					throw new InsightError(`Invalid query key '${queryKey}'.`);
-				}
-			}
-			this.extractDatasetIds(obj[key], datasetIds);
-		}
-	}
-
-	/**
-	 * Validates a query against dataset requirements.
-	 * @param query - The query to validate.
-	 * @throws InsightError if the query is invalid.
-	 */
-	public validateQuery(query: Query): string {
-		if (!query.WHERE) {
-			throw new InsightError("Invalid query: 'WHERE' clause is missing.");
-		}
-
-		if (!query.OPTIONS?.COLUMNS) {
-			throw new InsightError("Invalid query: 'OPTIONS' or 'COLUMNS' missing.");
-		}
-
-		// Extract dataset IDs from query keys
-		const datasetIds = new Set<string>();
-
-		// Check WHERE clause
-		this.extractDatasetIds(query.WHERE, datasetIds);
-
-		// Check only one dataset is referenced in WHERE
-		for (const column of query.OPTIONS.COLUMNS) {
-			const datasetId = column.split("_")[0]; // Extract dataset prefix
-			datasetIds.add(datasetId);
-		}
-
-		// Check only one dataset is referenced in OPTIONS
-		if (query.OPTIONS.ORDER) {
-			if (typeof query.OPTIONS.ORDER === "string") {
-				const datasetId = query.OPTIONS.ORDER.split("_")[0];
-				datasetIds.add(datasetId);
-			} else {
-				for (const key of query.OPTIONS.ORDER.keys) {
-					const datasetId = key.split("_")[0];
-					datasetIds.add(datasetId);
-				}
-			}
-		}
-
-		if (datasetIds.size !== 1) {
-			throw new InsightError(
-				`Invalid query: Must reference exactly one dataset, found: ${Array.from(datasetIds).join(", ")}`
-			);
-		}
-
-		return Array.from(datasetIds)[0];
-	}
 
 	/**
 	 * Evaluates an AND condition: all subconditions must be true for the overall condition to be true.
@@ -215,9 +76,9 @@ export class QueryEngine {
 
 		let contentValue: string | number;
 		if (content instanceof Section) {
-			contentValue = this.getSectionValue(content, datasetKey);
+			contentValue = SectionHelper.getSectionValue(content, datasetKey);
 		} else {
-			contentValue = this.getRoomValue(content, datasetKey);
+			contentValue = RoomHelper.getRoomValue(content, datasetKey);
 		}
 
 		// Use a helper function for the "IS" operator
@@ -429,9 +290,9 @@ export class QueryEngine {
 			const result: InsightResult = {};
 			for (const column of columns) {
 				if (section_or_room instanceof Section) {
-					result[column] = this.getSectionValue(section_or_room, column);
+					result[column] = SectionHelper.getSectionValue(section_or_room, column);
 				} else {
-					result[column] = this.getRoomValue(section_or_room, column);
+					result[column] = RoomHelper.getRoomValue(section_or_room, column);
 				}
 			}
 			return result;
@@ -451,7 +312,7 @@ export class QueryEngine {
 			OPTIONS: rawQuery.OPTIONS,
 		};
 
-		const datasetId = this.validateQuery(query);
+		const datasetId = QueryHelper.validateQuery(query, this.validKeys);
 
 		const dataset: Dataset | null = await dp.loadFromDisk(datasetId);
 		if (!dataset) {
