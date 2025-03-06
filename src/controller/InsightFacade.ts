@@ -10,7 +10,7 @@ import { DatasetProcessor } from "./DatasetProcessor";
 import JSZip from "jszip";
 import { Section } from "./types/Section";
 import { Dataset } from "./types/Dataset";
-import { QueryEngine } from "./QueryEngine";
+import { QueryEngine } from "./query_logic/QueryEngine";
 import fs from "fs-extra";
 import path from "path";
 import { RoomProcessor } from "./RoomProcessor";

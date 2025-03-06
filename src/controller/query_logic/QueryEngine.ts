@@ -1,9 +1,12 @@
-import { Dataset } from "./types/Dataset";
-import { DatasetProcessor } from "./DatasetProcessor";
-import { Section } from "./types/Section";
-import { Room } from "./types/Room";
-import { Query } from "./types/Query";
-import { InsightError, InsightResult, ResultTooLargeError } from "./IInsightFacade";
+import { Dataset } from "../types/Dataset";
+import { DatasetProcessor } from "../DatasetProcessor";
+import { Section } from "../types/Section";
+import { Room } from "../types/Room";
+import { Query } from "../types/Query";
+import { SectionHelper } from "./SectionHelper";
+import { RoomHelper } from "./RoomHelper";
+import { QueryHelper } from "./QueryHelper";
+import { InsightError, InsightResult, ResultTooLargeError } from "../IInsightFacade";
 
 export class QueryEngine {
 	private limit: number = 5000;
@@ -34,155 +37,13 @@ export class QueryEngine {
 	]);
 
 	/**
-	 * Retrieves the value of a specific field from a Section object.
-	 * @param section - The Section instance containing course data.
-	 * @param key - The dataset-prefixed column name (e.g., "courses_avg").
-	 * @returns The corresponding field value as a string or number.
-	 * @throws InsightError if the key does not correspond to a valid section field.
-	 */
-	private getSectionValue(section: Section, key: string): string | number {
-		const fieldMap: Record<string, (s: Section) => string | number> = {
-			uuid: (s) => s.getUuid(),
-			id: (s) => s.getId(),
-			title: (s) => s.getTitle(),
-			instructor: (s) => s.getInstructor(),
-			dept: (s) => s.getDept(),
-			year: (s) => s.getYear(),
-			avg: (s) => s.getAvg(),
-			pass: (s) => s.getPass(),
-			fail: (s) => s.getFail(),
-			audit: (s) => s.getAudit(),
-		};
-
-		// Extract field name by removing dataset ID prefix (section_avg -> avg)
-		const fieldName = key.split("_")[1];
-
-		if (!fieldMap[fieldName]) {
-			throw new InsightError(`Column '${key}' not found in section.`);
-		}
-
-		const value = fieldMap[fieldName](section);
-		if (["avg", "pass", "fail", "audit", "year"].includes(fieldName)) {
-			return Number(value);
-		}
-		return String(value);
-	}
-
-	/**
-	 * Retrieves the value of a specific field from a Room object.
-	 * @param room - The Room instance containing room data.
-	 * @param key - The dataset-prefixed column name (e.g., "rooms_lat").
-	 * @returns The corresponding field value as a string or number.
-	 * @throws InsightError if the key does not correspond to a valid room field.
-	 */
-	private getRoomValue(room: Room, key: string): string | number {
-		const fieldMap: Record<string, (r: Room) => string | number> = {
-			fullname: (r) => r.getFullname(),
-			shortname: (r) => r.getShortname(),
-			number: (r) => r.getNumber(),
-			name: (r) => r.getName(),
-			address: (r) => r.getAddress(),
-			lat: (r) => r.getLat(),
-			lon: (r) => r.getLon(),
-			seats: (r) => r.getSeats(),
-			type: (r) => r.getType(),
-			furniture: (r) => r.getFurniture(),
-			href: (r) => r.getHref(),
-		};
-
-		// Extract field name by removing dataset ID prefix (rooms_lat -> lat)
-		const fieldName = key.split("_")[1];
-
-		if (!fieldMap[fieldName]) {
-			throw new InsightError(`Column '${key}' not found in room.`);
-		}
-
-		const value = fieldMap[fieldName](room);
-		if (["lat", "lon", "seats"].includes(fieldName)) {
-			return Number(value); // Return numeric values for lat, lon, and seats
-		}
-		return String(value); // Return string for other fields
-	}
-
-	/**
-	 * Recursively extracts dataset IDs from query filters.
-	 * @param obj - The query object containing filtering conditions.
-	 * @param datasetIds - A set to store extracted dataset IDs.
-	 * @throws InsightError if an invalid query key is encountered.
-	 */
-	private extractDatasetIds(obj: any, datasetIds: Set<string>): void {
-		if (typeof obj !== "object" || obj === null) return;
-
-		for (const key in obj) {
-			if (key.includes("_")) {
-				const datasetId = key.split("_")[0];
-				datasetIds.add(datasetId);
-
-				const queryKey = key.split("_")[1];
-				if (!this.validKeys.has(queryKey)) {
-					throw new InsightError(`Invalid query key '${queryKey}'.`);
-				}
-			}
-			this.extractDatasetIds(obj[key], datasetIds);
-		}
-	}
-
-	/**
-	 * Validates a query against dataset requirements.
-	 * @param query - The query to validate.
-	 * @throws InsightError if the query is invalid.
-	 */
-	public validateQuery(query: Query): string {
-		if (!query.WHERE) {
-			throw new InsightError("Invalid query: 'WHERE' clause is missing.");
-		}
-
-		if (!query.OPTIONS?.COLUMNS) {
-			throw new InsightError("Invalid query: 'OPTIONS' or 'COLUMNS' missing.");
-		}
-
-		// Extract dataset IDs from query keys
-		const datasetIds = new Set<string>();
-
-		// Check WHERE clause
-		this.extractDatasetIds(query.WHERE, datasetIds);
-
-		// Check only one dataset is referenced in WHERE
-		for (const column of query.OPTIONS.COLUMNS) {
-			const datasetId = column.split("_")[0]; // Extract dataset prefix
-			datasetIds.add(datasetId);
-		}
-
-		// Check only one dataset is referenced in OPTIONS
-		if (query.OPTIONS.ORDER) {
-			if (typeof query.OPTIONS.ORDER === "string") {
-				const datasetId = query.OPTIONS.ORDER.split("_")[0];
-				datasetIds.add(datasetId);
-			} else {
-				for (const key of query.OPTIONS.ORDER.keys) {
-					const datasetId = key.split("_")[0];
-					datasetIds.add(datasetId);
-				}
-			}
-		}
-
-		if (datasetIds.size !== 1) {
-			throw new InsightError(
-				`Invalid query: Must reference exactly one dataset, found: ${Array.from(datasetIds).join(", ")}`
-			);
-		}
-
-		return Array.from(datasetIds)[0];
-	}
-
-	/**
 	 * Evaluates an AND condition: all subconditions must be true for the overall condition to be true.
 	 * @param conditions - An array of conditions to be evaluated.
 	 * @param content - The section or room being evaluated against the conditions.
 	 * @returns `true` if all subconditions are true, otherwise `false`.
 	 */
 	private handleAND(conditions: any[], content: Section | Room): boolean {
-		return conditions.every((subCondition) => this.evaluateCondition(subCondition, content));
+		return conditions.every((subCondition) => QueryHelper.evaluateCondition(subCondition, content));
 	}
 
 	/**
@@ -192,7 +53,7 @@ export class QueryEngine {
 	 * @returns `true` if at least one subcondition is true, otherwise `false`.
 	 */
 	private handleOR(conditions: any[], content: Section | Room): boolean {
-		return conditions.some((subCondition) => this.evaluateCondition(subCondition, content));
+		return conditions.some((subCondition) => QueryHelper.evaluateCondition(subCondition, content));
 	}
 
 	/**
@@ -215,14 +76,14 @@ export class QueryEngine {
 
 		let contentValue: string | number;
 		if (content instanceof Section) {
-			contentValue = this.getSectionValue(content, datasetKey);
+			contentValue = SectionHelper.getSectionValue(content, datasetKey);
 		} else {
-			contentValue = this.getRoomValue(content, datasetKey);
+			contentValue = RoomHelper.getRoomValue(content, datasetKey);
 		}
 
 		// Use a helper function for the "IS" operator
 		if (operator === "IS") {
-			return this.handleISComparator(column, contentValue, value);
+			return QueryHelper.handleISComparator(contentValue, value);
 		}
 
 		// Handle numeric comparators
@@ -239,50 +100,6 @@ export class QueryEngine {
 				return contentValue === value;
 			default:
 				throw new InsightError(`Invalid operator: '${operator}'.`);
-		}
-	}
-
-	private handleISComparator(column: string, contentValue: string | number, value: string): boolean {
-		if (typeof contentValue !== "string" || typeof value !== "string") {
-			throw new InsightError(`Invalid query: '${column}' must be a string field for 'IS' operator.`);
-		}
-
-		const middleWildcard = value.slice(1, -1).includes("*");
-		if (middleWildcard) {
-			throw new InsightError(`Invalid query: Wildcard '*' can only be at the beginning or end.`);
-		}
-
-		const regexPattern = "^" + value.replace(/\*/g, ".*") + "$";
-		const regex = new RegExp(regexPattern);
-		return regex.test(contentValue);
-	}
-
-	/**
-	 * Recursively evaluates a WHERE condition on a section.
-	 * @param filter - The filter condition (e.g., "AND", "OR", "GT", "LT", "EQ", "IS").
-	 * @param content - The section or room to evaluate against the filter.
-	 * @returns `true` if the section satisfies the filter condition, otherwise `false`.
-	 * @throws InsightError if the filter contains an unsupported condition type.
-	 */
-	private evaluateCondition(filter: Record<string, any>, content: Section | Room): boolean {
-		// get the key (OR
-		// i.e., OR [{"GT": {"sections_avg": 97}},{"LT": {"sections_pass": 50}}]
-		const key = Object.keys(filter)[0];
-
-		switch (key) {
-			case "AND":
-				return this.handleAND(filter.AND, content);
-			case "OR":
-				return this.handleOR(filter.OR, content);
-			case "NOT":
-				return !this.evaluateCondition(filter.NOT, content);
-			case "GT":
-			case "LT":
-			case "EQ":
-			case "IS":
-				return this.handleComparator(key, filter[key], content);
-			default:
-				throw new InsightError(`Unsupported filter type: ${key}`);
 		}
 	}
 
@@ -305,11 +122,11 @@ export class QueryEngine {
 		if (datasetContent.length > 0) {
 			if (datasetContent[0] instanceof Section) {
 				return datasetContent.filter((content) => {
-					return this.evaluateCondition(where, content);
+					return QueryHelper.evaluateCondition(where, content);
 				}) as Section[];
 			} else if (datasetContent[0] instanceof Room) {
 				return datasetContent.filter((content) => {
-					return this.evaluateCondition(where, content);
+					return QueryHelper.evaluateCondition(where, content);
 				}) as Room[];
 			}
 		}
@@ -405,6 +222,159 @@ export class QueryEngine {
 	}
 
 	/**
+	 * TODO.
+	 * @param operator - TODO.
+	 * @param field - TODO.
+	 * @param groupItems - TODO
+	 * @returns TODO.
+	 * @throws InsightError TODO.
+	 */
+	private computeApplyOperation(
+		operator: string,
+		field: string,
+		groupItems: Section[] | Room[]
+	): number {
+		const values = groupItems.map((item) =>
+			item instanceof Section
+				? SectionHelper.getSectionValue(item, field)
+				: RoomHelper.getRoomValue(item, field)
+		);
+
+		const numericValues = values.map(val => Number(val));
+
+		switch (operator) {
+			case "AVG":
+				// Ensure the values are numbers
+				return (values as number[]).reduce((sum, val) => sum + val, 0) / values.length;
+			case "SUM":
+				// Ensure the values are numbers
+				return numericValues.reduce((sum, val) => isNaN(val) ? sum : sum + val, 0);
+			case "COUNT":
+				return new Set(values).size;
+			case "MAX":
+				return Math.max(...values.map(val => Number(val)));
+			case "MIN":
+				return Math.min(...values.map(val => Number(val)));
+			default:
+				throw new InsightError(`Invalid APPLY operation: ${operator}`);
+		}
+	}
+
+	/**
+	 * Processes a group of items (either Section or Room) and applies transformations (e.g., aggregations).
+	 *
+	 * - The GROUP keys are used to split the groupKey, and then each item is processed according to APPLY.
+	 *
+	 * @param groupKey - The unique key that identifies the group, formed by joining the GROUP field values with "|".
+	 * @param groupItems - The array of items (either Section[] or Room[]) that belong to this group.
+	 * @param GROUP - The list of fields used for grouping the items.
+	 * @param APPLY - The list of transformation rules specifying how to apply operations (e.g., AVG, MAX) to the grouped items.
+	 * @returns The transformed item, which includes the GROUP values and the result of the APPLY transformations.
+	 * @throws InsightError - Throws an error if the transformation cannot be applied or if the grouping is invalid.
+	 */
+	private processGroup(
+		groupKey: string,
+		groupItems: Section[] | Room[],
+		GROUP: string[],
+		APPLY: any[]
+	): Record<string, any> {
+		const transformedItem: Record<string, any> = {};
+
+		// Assign GROUP keys to transformed item
+		GROUP.forEach((key, index) => { // key is name of field ("sections_title")
+			transformedItem[key] = groupKey.split("|")[index]; // splits key into array: "Math|101" => ["Math", "101"]
+		}); // returns like {"sections_title": "Math", "room_number": "101"}
+
+		// Process APPLY transformations
+		for (const applyRule of APPLY) {
+			const applyKey = Object.keys(applyRule)[0]; // Name of the computed field
+			const applyObj = applyRule[applyKey];
+
+			const applyOperator = Object.keys(applyObj)[0];
+			const field = applyObj[applyOperator];
+
+			transformedItem[applyKey] = this.computeApplyOperation(applyOperator, field, groupItems);
+		}
+
+		return transformedItem;
+	}
+
+	/**
+	 * Groups the dataset by the specified GROUP keys (Sections or Rooms).
+	 * @param dataset - The dataset to group (Sections or Rooms).
+	 * @param GROUP - The GROUP keys used to group the dataset.
+	 * @returns A tuple containing two maps: one for sections and one for rooms.
+	 */
+	private groupByKeys(
+		dataset: Section[] | Room[],
+		GROUP: string[]
+	): [Map<string, Section[]>, Map<string, Room[]>] {
+		const sectionGroups = new Map<string, Section[]>();
+		const roomGroups = new Map<string, Room[]>();
+
+		dataset.forEach(item => {
+			// Loop over the Group Columns and create a unique key based on GROUP values
+			const groupKey = GROUP.map((key) =>
+				item instanceof Section
+					? SectionHelper.getSectionValue(item, key)
+					: RoomHelper.getRoomValue(item, key)
+			).join("|"); // i.e., groupKey = ["Math 101", "Dr. Smith"].join("|") => "Math 101|Dr. Johnson"
+
+			// Add to appropriate group (Section or Room)
+			if (item instanceof Section) {
+				if (!sectionGroups.has(groupKey)) {
+					sectionGroups.set(groupKey, []);
+				}
+				sectionGroups.get(groupKey)!.push(item);
+			} else {
+				if (!roomGroups.has(groupKey)) {
+					roomGroups.set(groupKey, []);
+				}
+				roomGroups.get(groupKey)!.push(item);
+			}
+		});
+
+		return [sectionGroups, roomGroups];
+	}
+
+	/**
+	 * TODO.
+	 * @param query - TODO.
+	 * @param dataset - TODO.
+	 * @returns TODO.
+	 * @throws InsightError TODO.
+	 */
+	private handleTransformations(
+		query: Record<string, any>,
+		dataset: Section[] | Room[]
+	): any[] {
+		if (!query.TRANSFORMATIONS) {
+			return dataset; // No transformations, return as-is
+		}
+
+		const { GROUP, APPLY } = query.TRANSFORMATIONS;
+
+		if (!Array.isArray(GROUP) || !Array.isArray(APPLY)) {
+			throw new InsightError("Invalid TRANSFORMATIONS format");
+		}
+
+		// Step 1: Group dataset by GROUP keys
+		const [sectionGroups, roomGroups] = this.groupByKeys(dataset, GROUP);
+
+		// Step 2: Apply aggregations
+		const transformedData: any[] = [];
+		for (const [groupKey, groupItems] of sectionGroups.entries()) {
+			transformedData.push(this.processGroup(groupKey, groupItems, GROUP, APPLY));
+		}
+
+		for (const [groupKey, groupItems] of roomGroups.entries()) {
+			transformedData.push(this.processGroup(groupKey, groupItems, GROUP, APPLY));
+		}
+
+		return transformedData;
+	}
+
+	/**
 	 * Processes the OPTIONS section of the query, applying sorting and selecting specified columns.
 	 * @param options - The OPTIONS clause of the query, containing COLUMNS and optionally ORDER.
 	 * @param content - The array of sections or rooms that match the query conditions.
@@ -429,9 +399,9 @@ export class QueryEngine {
 			const result: InsightResult = {};
 			for (const column of columns) {
 				if (section_or_room instanceof Section) {
-					result[column] = this.getSectionValue(section_or_room, column);
+					result[column] = SectionHelper.getSectionValue(section_or_room, column);
 				} else {
-					result[column] = this.getRoomValue(section_or_room, column);
+					result[column] = RoomHelper.getRoomValue(section_or_room, column);
 				}
 			}
 			return result;
@@ -451,14 +421,22 @@ export class QueryEngine {
 			OPTIONS: rawQuery.OPTIONS,
 		};
 
-		const datasetId = this.validateQuery(query);
+		const datasetId = QueryHelper.validateQuery(query, this.validKeys);
 
 		const dataset: Dataset | null = await dp.loadFromDisk(datasetId);
 		if (!dataset) {
 			throw new InsightError(`Dataset with ID '${datasetId}' not found.`);
 		}
 
-		const queriedContent: Section[] | Room[] = this.handleWhere(query.WHERE ?? {}, dataset);
+		// Filter dataset using WHERE
+		let queriedContent: Section[] | Room[] = this.handleWhere(query.WHERE ?? {}, dataset);
+
+		// Handle TRANSFORMATIONS if present
+		if (query.TRANSFORMATIONS) {
+			queriedContent = this.handleTransformations(query.TRANSFORMATIONS, queriedContent);
+		}
+
+		// Apply OPTIONS (select columns, order results)
 		return this.handleOptions(query.OPTIONS ?? {}, queriedContent);
 	}
 }
