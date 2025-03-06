@@ -1,0 +1,486 @@
+{
+	"title": "ValidRoomVeryComplicated",
+	"input": {
+		"WHERE": {
+			"AND": [
+				{
+					"IS": {
+						"rooms_furniture": "*Tables*"
+					}
+				},
+				{
+					"GT": {
+						"rooms_seats": 100
+					}
+				}
+			]
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"rooms_fullname",
+				"rooms_shortname",
+				"rooms_number",
+				"rooms_name",
+				"rooms_address",
+				"rooms_lat",
+				"rooms_lon",
+				"rooms_seats",
+				"rooms_type",
+				"rooms_furniture",
+				"rooms_href",
+				"maxSeats"
+			],
+			"ORDER": {
+				"dir": "DOWN",
+				"keys": [
+					"maxSeats"
+				]
+			}
+		},
+		"TRANSFORMATIONS": {
+			"GROUP": [
+				"rooms_fullname",
+				"rooms_shortname",
+				"rooms_number",
+				"rooms_name",
+				"rooms_address",
+				"rooms_lat",
+				"rooms_lon",
+				"rooms_seats",
+				"rooms_type",
+				"rooms_furniture",
+				"rooms_href"
+			],
+			"APPLY": [
+				{
+					"maxSeats": {
+						"MAX": "rooms_seats"
+					}
+				}
+			]
+		}
+	},
+	"errorExpected": false,
+	"expected": [
+		{
+			"rooms_fullname": "Robert F. Osborne Centre",
+			"rooms_shortname": "OSBO",
+			"rooms_number": "A",
+			"rooms_name": "OSBO_A",
+			"rooms_address": "6108 Thunderbird Boulevard",
+			"rooms_lat": 49.26047,
+			"rooms_lon": -123.24467,
+			"rooms_seats": 442,
+			"rooms_type": "Open Design General Purpose",
+			"rooms_furniture": "Classroom-Movable Tables & Chairs",
+			"rooms_href": "http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/OSBO-A",
+			"maxSeats": 442
+		},
+		{
+			"rooms_fullname": "Hebb",
+			"rooms_shortname": "HEBB",
+			"rooms_number": "100",
+			"rooms_name": "HEBB_100",
+			"rooms_address": "2045 East Mall",
+			"rooms_lat": 49.2661,
+			"rooms_lon": -123.25165,
+			"rooms_seats": 375,
+			"rooms_type": "Tiered Large Group",
+			"rooms_furniture": "Classroom-Fixed Tables/Fixed Chairs",
+			"rooms_href": "http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/HEBB-100",
+			"maxSeats": 375
+		},
+		{
+			"rooms_fullname": "Life Sciences Centre",
+			"rooms_shortname": "LSC",
+			"rooms_number": "1001",
+			"rooms_name": "LSC_1001",
+			"rooms_address": "2350 Health Sciences Mall",
+			"rooms_lat": 49.26236,
+			"rooms_lon": -123.24494,
+			"rooms_seats": 350,
+			"rooms_type": "Tiered Large Group",
+			"rooms_furniture": "Classroom-Fixed Tables/Movable Chairs",
+			"rooms_href": "http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/LSC-1001",
+			"maxSeats": 350
+		},
+		{
+			"rooms_fullname": "Life Sciences Centre",
+			"rooms_shortname": "LSC",
+			"rooms_number": "1002",
+			"rooms_name": "LSC_1002",
+			"rooms_address": "2350 Health Sciences Mall",
+			"rooms_lat": 49.26236,
+			"rooms_lon": -123.24494,
+			"rooms_seats": 350,
+			"rooms_type": "Tiered Large Group",
+			"rooms_furniture": "Classroom-Fixed Tables/Movable Chairs",
+			"rooms_href": "http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/LSC-1002",
+			"maxSeats": 350
+		},
+		{
+			"rooms_fullname": "Student Recreation Centre",
+			"rooms_shortname": "SRC",
+			"rooms_number": "220A",
+			"rooms_name": "SRC_220A",
+			"rooms_address": "6000 Student Union Blvd",
+			"rooms_lat": 49.2683,
+			"rooms_lon": -123.24894,
+			"rooms_seats": 299,
+			"rooms_type": "TBD",
+			"rooms_furniture": "Classroom-Movable Tables & Chairs",
+			"rooms_href": "http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/SRC-220A",
+			"maxSeats": 299
+		},
+		{
+			"rooms_fullname": "Student Recreation Centre",
+			"rooms_shortname": "SRC",
+			"rooms_number": "220B",
+			"rooms_name": "SRC_220B",
+			"rooms_address": "6000 Student Union Blvd",
+			"rooms_lat": 49.2683,
+			"rooms_lon": -123.24894,
+			"rooms_seats": 299,
+			"rooms_type": "TBD",
+			"rooms_furniture": "Classroom-Movable Tables & Chairs",
+			"rooms_href": "http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/SRC-220B",
+			"maxSeats": 299
+		},
+		{
+			"rooms_fullname": "Student Recreation Centre",
+			"rooms_shortname": "SRC",
+			"rooms_number": "220C",
+			"rooms_name": "SRC_220C",
+			"rooms_address": "6000 Student Union Blvd",
+			"rooms_lat": 49.2683,
+			"rooms_lon": -123.24894,
+			"rooms_seats": 299,
+			"rooms_type": "TBD",
+			"rooms_furniture": "Classroom-Movable Tables & Chairs",
+			"rooms_href": "http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/SRC-220C",
+			"maxSeats": 299
+		},
+		{
+			"rooms_fullname": "Henry Angus",
+			"rooms_shortname": "ANGU",
+			"rooms_number": "098",
+			"rooms_name": "ANGU_098",
+			"rooms_address": "2053 Main Mall",
+			"rooms_lat": 49.26486,
+			"rooms_lon": -123.25364,
+			"rooms_seats": 260,
+			"rooms_type": "Tiered Large Group",
+			"rooms_furniture": "Classroom-Fixed Tables/Movable Chairs",
+			"rooms_href": "http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/ANGU-098",
+			"maxSeats": 260
+		},
+		{
+			"rooms_fullname": "Pharmaceutical Sciences Building",
+			"rooms_shortname": "PHRM",
+			"rooms_number": "1101",
+			"rooms_name": "PHRM_1101",
+			"rooms_address": "2405 Wesbrook Mall",
+			"rooms_lat": 49.26229,
+			"rooms_lon": -123.24342,
+			"rooms_seats": 236,
+			"rooms_type": "Tiered Large Group",
+			"rooms_furniture": "Classroom-Fixed Tables/Movable Chairs",
+			"rooms_href": "http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/PHRM-1101",
+			"maxSeats": 236
+		},
+		{
+			"rooms_fullname": "Leonard S. Klinck (also known as CSCI)",
+			"rooms_shortname": "LSK",
+			"rooms_number": "200",
+			"rooms_name": "LSK_200",
+			"rooms_address": "6356 Agricultural Road",
+			"rooms_lat": 49.26545,
+			"rooms_lon": -123.25533,
+			"rooms_seats": 205,
+			"rooms_type": "Tiered Large Group",
+			"rooms_furniture": "Classroom-Fixed Tables/Fixed Chairs",
+			"rooms_href": "http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/LSK-200",
+			"maxSeats": 205
+		},
+		{
+			"rooms_fullname": "Chemical and Biological Engineering Building",
+			"rooms_shortname": "CHBE",
+			"rooms_number": "101",
+			"rooms_name": "CHBE_101",
+			"rooms_address": "2360 East Mall V6T 1Z3",
+			"rooms_lat": 49.26228,
+			"rooms_lon": -123.24718,
+			"rooms_seats": 200,
+			"rooms_type": "Tiered Large Group",
+			"rooms_furniture": "Classroom-Fixed Tables/Movable Chairs",
+			"rooms_href": "http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/CHBE-101",
+			"maxSeats": 200
+		},
+		{
+			"rooms_fullname": "West Mall Swing Space",
+			"rooms_shortname": "SWNG",
+			"rooms_number": "221",
+			"rooms_name": "SWNG_221",
+			"rooms_address": "2175 West Mall V6T 1Z4",
+			"rooms_lat": 49.26293,
+			"rooms_lon": -123.25431,
+			"rooms_seats": 190,
+			"rooms_type": "Tiered Large Group",
+			"rooms_furniture": "Classroom-Fixed Tables/Movable Chairs",
+			"rooms_href": "http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/SWNG-221",
+			"maxSeats": 190
+		},
+		{
+			"rooms_fullname": "West Mall Swing Space",
+			"rooms_shortname": "SWNG",
+			"rooms_number": "222",
+			"rooms_name": "SWNG_222",
+			"rooms_address": "2175 West Mall V6T 1Z4",
+			"rooms_lat": 49.26293,
+			"rooms_lon": -123.25431,
+			"rooms_seats": 190,
+			"rooms_type": "Tiered Large Group",
+			"rooms_furniture": "Classroom-Fixed Tables/Movable Chairs",
+			"rooms_href": "http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/SWNG-222",
+			"maxSeats": 190
+		},
+		{
+			"rooms_fullname": "West Mall Swing Space",
+			"rooms_shortname": "SWNG",
+			"rooms_number": "122",
+			"rooms_name": "SWNG_122",
+			"rooms_address": "2175 West Mall V6T 1Z4",
+			"rooms_lat": 49.26293,
+			"rooms_lon": -123.25431,
+			"rooms_seats": 188,
+			"rooms_type": "Tiered Large Group",
+			"rooms_furniture": "Classroom-Fixed Tables/Movable Chairs",
+			"rooms_href": "http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/SWNG-122",
+			"maxSeats": 188
+		},
+		{
+			"rooms_fullname": "West Mall Swing Space",
+			"rooms_shortname": "SWNG",
+			"rooms_number": "121",
+			"rooms_name": "SWNG_121",
+			"rooms_address": "2175 West Mall V6T 1Z4",
+			"rooms_lat": 49.26293,
+			"rooms_lon": -123.25431,
+			"rooms_seats": 187,
+			"rooms_type": "Tiered Large Group",
+			"rooms_furniture": "Classroom-Fixed Tables/Movable Chairs",
+			"rooms_href": "http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/SWNG-121",
+			"maxSeats": 187
+		},
+		{
+			"rooms_fullname": "Leonard S. Klinck (also known as CSCI)",
+			"rooms_shortname": "LSK",
+			"rooms_number": "201",
+			"rooms_name": "LSK_201",
+			"rooms_address": "6356 Agricultural Road",
+			"rooms_lat": 49.26545,
+			"rooms_lon": -123.25533,
+			"rooms_seats": 183,
+			"rooms_type": "Tiered Large Group",
+			"rooms_furniture": "Classroom-Fixed Tables/Fixed Chairs",
+			"rooms_href": "http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/LSK-201",
+			"maxSeats": 183
+		},
+		{
+			"rooms_fullname": "Pharmaceutical Sciences Building",
+			"rooms_shortname": "PHRM",
+			"rooms_number": "1201",
+			"rooms_name": "PHRM_1201",
+			"rooms_address": "2405 Wesbrook Mall",
+			"rooms_lat": 49.26229,
+			"rooms_lon": -123.24342,
+			"rooms_seats": 167,
+			"rooms_type": "Tiered Large Group",
+			"rooms_furniture": "Classroom-Fixed Tables/Movable Chairs",
+			"rooms_href": "http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/PHRM-1201",
+			"maxSeats": 167
+		},
+		{
+			"rooms_fullname": "Friedman Building",
+			"rooms_shortname": "FRDM",
+			"rooms_number": "153",
+			"rooms_name": "FRDM_153",
+			"rooms_address": "2177 Wesbrook Mall V6T 1Z3",
+			"rooms_lat": 49.26541,
+			"rooms_lon": -123.24608,
+			"rooms_seats": 160,
+			"rooms_type": "Tiered Large Group",
+			"rooms_furniture": "Classroom-Fixed Tables/Movable Chairs",
+			"rooms_href": "http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/FRDM-153",
+			"maxSeats": 160
+		},
+		{
+			"rooms_fullname": "Hugh Dempster Pavilion",
+			"rooms_shortname": "DMP",
+			"rooms_number": "310",
+			"rooms_name": "DMP_310",
+			"rooms_address": "6245 Agronomy Road V6T 1Z4",
+			"rooms_lat": 49.26125,
+			"rooms_lon": -123.24807,
+			"rooms_seats": 160,
+			"rooms_type": "Tiered Large Group",
+			"rooms_furniture": "Classroom-Fixed Tables/Movable Chairs",
+			"rooms_href": "http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/DMP-310",
+			"maxSeats": 160
+		},
+		{
+			"rooms_fullname": "Irving K Barber Learning Centre",
+			"rooms_shortname": "IBLC",
+			"rooms_number": "182",
+			"rooms_name": "IBLC_182",
+			"rooms_address": "1961 East Mall V6T 1Z1",
+			"rooms_lat": 49.26766,
+			"rooms_lon": -123.2521,
+			"rooms_seats": 154,
+			"rooms_type": "Tiered Large Group",
+			"rooms_furniture": "Classroom-Fixed Tables/Fixed Chairs",
+			"rooms_href": "http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/IBLC-182",
+			"maxSeats": 154
+		},
+		{
+			"rooms_fullname": "MacLeod",
+			"rooms_shortname": "MCLD",
+			"rooms_number": "228",
+			"rooms_name": "MCLD_228",
+			"rooms_address": "2356 Main Mall",
+			"rooms_lat": 49.26176,
+			"rooms_lon": -123.24935,
+			"rooms_seats": 136,
+			"rooms_type": "Tiered Large Group",
+			"rooms_furniture": "Classroom-Fixed Tables/Fixed Chairs",
+			"rooms_href": "http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/MCLD-228",
+			"maxSeats": 136
+		},
+		{
+			"rooms_fullname": "Life Sciences Centre",
+			"rooms_shortname": "LSC",
+			"rooms_number": "1003",
+			"rooms_name": "LSC_1003",
+			"rooms_address": "2350 Health Sciences Mall",
+			"rooms_lat": 49.26236,
+			"rooms_lon": -123.24494,
+			"rooms_seats": 125,
+			"rooms_type": "Tiered Large Group",
+			"rooms_furniture": "Classroom-Fixed Tables/Movable Chairs",
+			"rooms_href": "http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/LSC-1003",
+			"maxSeats": 125
+		},
+		{
+			"rooms_fullname": "MacLeod",
+			"rooms_shortname": "MCLD",
+			"rooms_number": "202",
+			"rooms_name": "MCLD_202",
+			"rooms_address": "2356 Main Mall",
+			"rooms_lat": 49.26176,
+			"rooms_lon": -123.24935,
+			"rooms_seats": 123,
+			"rooms_type": "Tiered Large Group",
+			"rooms_furniture": "Classroom-Fixed Tables/Fixed Chairs",
+			"rooms_href": "http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/MCLD-202",
+			"maxSeats": 123
+		},
+		{
+			"rooms_fullname": "Hugh Dempster Pavilion",
+			"rooms_shortname": "DMP",
+			"rooms_number": "110",
+			"rooms_name": "DMP_110",
+			"rooms_address": "6245 Agronomy Road V6T 1Z4",
+			"rooms_lat": 49.26125,
+			"rooms_lon": -123.24807,
+			"rooms_seats": 120,
+			"rooms_type": "Tiered Large Group",
+			"rooms_furniture": "Classroom-Fixed Tables/Movable Chairs",
+			"rooms_href": "http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/DMP-110",
+			"maxSeats": 120
+		},
+		{
+			"rooms_fullname": "Woodward (Instructional Resources Centre-IRC)",
+			"rooms_shortname": "WOOD",
+			"rooms_number": "1",
+			"rooms_name": "WOOD_1",
+			"rooms_address": "2194 Health Sciences Mall",
+			"rooms_lat": 49.26478,
+			"rooms_lon": -123.24673,
+			"rooms_seats": 120,
+			"rooms_type": "Tiered Large Group",
+			"rooms_furniture": "Classroom-Fixed Tables/Movable Chairs",
+			"rooms_href": "http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/WOOD-1",
+			"maxSeats": 120
+		},
+		{
+			"rooms_fullname": "Woodward (Instructional Resources Centre-IRC)",
+			"rooms_shortname": "WOOD",
+			"rooms_number": "4",
+			"rooms_name": "WOOD_4",
+			"rooms_address": "2194 Health Sciences Mall",
+			"rooms_lat": 49.26478,
+			"rooms_lon": -123.24673,
+			"rooms_seats": 120,
+			"rooms_type": "Tiered Large Group",
+			"rooms_furniture": "Classroom-Fixed Tables/Movable Chairs",
+			"rooms_href": "http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/WOOD-4",
+			"maxSeats": 120
+		},
+		{
+			"rooms_fullname": "Woodward (Instructional Resources Centre-IRC)",
+			"rooms_shortname": "WOOD",
+			"rooms_number": "5",
+			"rooms_name": "WOOD_5",
+			"rooms_address": "2194 Health Sciences Mall",
+			"rooms_lat": 49.26478,
+			"rooms_lon": -123.24673,
+			"rooms_seats": 120,
+			"rooms_type": "Tiered Large Group",
+			"rooms_furniture": "Classroom-Fixed Tables/Movable Chairs",
+			"rooms_href": "http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/WOOD-5",
+			"maxSeats": 120
+		},
+		{
+			"rooms_fullname": "Irving K Barber Learning Centre",
+			"rooms_shortname": "IBLC",
+			"rooms_number": "261",
+			"rooms_name": "IBLC_261",
+			"rooms_address": "1961 East Mall V6T 1Z1",
+			"rooms_lat": 49.26766,
+			"rooms_lon": -123.2521,
+			"rooms_seats": 112,
+			"rooms_type": "Open Design General Purpose",
+			"rooms_furniture": "Classroom-Movable Tables & Chairs",
+			"rooms_href": "http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/IBLC-261",
+			"maxSeats": 112
+		},
+		{
+			"rooms_fullname": "Buchanan",
+			"rooms_shortname": "BUCH",
+			"rooms_number": "A202",
+			"rooms_name": "BUCH_A202",
+			"rooms_address": "1866 Main Mall",
+			"rooms_lat": 49.26826,
+			"rooms_lon": -123.25468,
+			"rooms_seats": 108,
+			"rooms_type": "Case Style",
+			"rooms_furniture": "Classroom-Fixed Tables/Fixed Chairs",
+			"rooms_href": "http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/BUCH-A202",
+			"maxSeats": 108
+		},
+		{
+			"rooms_fullname": "Buchanan",
+			"rooms_shortname": "BUCH",
+			"rooms_number": "A203",
+			"rooms_name": "BUCH_A203",
+			"rooms_address": "1866 Main Mall",
+			"rooms_lat": 49.26826,
+			"rooms_lon": -123.25468,
+			"rooms_seats": 108,
+			"rooms_type": "Case Style",
+			"rooms_furniture": "Classroom-Fixed Tables/Fixed Chairs",
+			"rooms_href": "http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/BUCH-A203",
+			"maxSeats": 108
+		}
+	]
+}

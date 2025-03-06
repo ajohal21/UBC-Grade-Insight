@@ -168,8 +168,10 @@ export class QueryEngine {
 			let keyName: string;
 			if (a instanceof Section) {
 				keyName = key.split("_")[1] as keyof Section;
-			} else {
+			} else if (b instanceof Room) {
 				keyName = key.split("_")[1] as keyof Room;
+			} else{
+				keyName = key;
 			}
 
 			const valA = this.getValueFromObject(a, keyName);
@@ -288,14 +290,22 @@ export class QueryEngine {
 	): Record<string, any> {
 		const transformedItem: Record<string, any> = {};
 
-		// Assign GROUP keys to transformed item
-		GROUP.forEach((key, index) => { // key is name of field ("sections_title")
-			transformedItem[key] = groupKey.split("|")[index]; // splits key into array: "Math|101" => ["Math", "101"]
-		}); // returns like {"sections_title": "Math", "room_number": "101"}
+		// Assign GROUP keys to transformed item, preserving numbers
+		GROUP.forEach((key, index) => {
+			const value = groupKey.split("|")[index];
+
+			// Check if the field should be a number (you'll need to define this logic)
+			if (this.shouldBeNumber(key)) {
+				const parsedValue = parseFloat(value);
+				transformedItem[key] = isNaN(parsedValue) ? value : parsedValue; // if parse fails, return string.
+			} else {
+				transformedItem[key] = value;
+			}
+		});
 
 		// Process APPLY transformations
 		for (const applyRule of APPLY) {
-			const applyKey = Object.keys(applyRule)[0]; // Name of the computed field
+			const applyKey = Object.keys(applyRule)[0];
 			const applyObj = applyRule[applyKey];
 
 			const applyOperator = Object.keys(applyObj)[0];
@@ -305,6 +315,15 @@ export class QueryEngine {
 		}
 
 		return transformedItem;
+	}
+
+// Helper function to determine if a field should be a number
+	private shouldBeNumber(key: string): boolean {
+		// Implement your logic here. For example:
+		if ( key.endsWith("_lat") || key.endsWith("_lon") || key.endsWith("_seats")) {
+			return true;
+		}
+		return false;
 	}
 
 	/**
