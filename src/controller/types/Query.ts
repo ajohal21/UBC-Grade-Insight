@@ -7,4 +7,8 @@ export type Query = {
 			keys: string[];
 		};
 	};
+	TRANSFORMATIONS?: {
+		GROUP: string[];
+		APPLY: Array<Record<string, Record<string, string>>>;
+	};
 };

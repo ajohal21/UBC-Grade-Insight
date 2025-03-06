@@ -222,6 +222,159 @@ export class QueryEngine {
 	}
 
 	/**
+	 * TODO.
+	 * @param operator - TODO.
+	 * @param field - TODO.
+	 * @param groupItems - TODO
+	 * @returns TODO.
+	 * @throws InsightError TODO.
+	 */
+	private computeApplyOperation(
+		operator: string,
+		field: string,
+		groupItems: Section[] | Room[]
+	): number {
+		const values = groupItems.map((item) =>
+			item instanceof Section
+				? SectionHelper.getSectionValue(item, field)
+				: RoomHelper.getRoomValue(item, field)
+		);
+
+		const numericValues = values.map(val => Number(val));
+
+		switch (operator) {
+			case "AVG":
+				// Ensure the values are numbers
+				return (values as number[]).reduce((sum, val) => sum + val, 0) / values.length;
+			case "SUM":
+				// Ensure the values are numbers
+				return numericValues.reduce((sum, val) => isNaN(val) ? sum : sum + val, 0);
+			case "COUNT":
+				return new Set(values).size;
+			case "MAX":
+				return Math.max(...values.map(val => Number(val)));
+			case "MIN":
+				return Math.min(...values.map(val => Number(val)));
+			default:
+				throw new InsightError(`Invalid APPLY operation: ${operator}`);
+		}
+	}
+
+	/**
+	 * Processes a group of items (either Section or Room) and applies transformations (e.g., aggregations).
+	 *
+	 * - The GROUP keys are used to split the groupKey, and then each item is processed according to APPLY.
+	 *
+	 * @param groupKey - The unique key that identifies the group, formed by joining the GROUP field values with "|".
+	 * @param groupItems - The array of items (either Section[] or Room[]) that belong to this group.
+	 * @param GROUP - The list of fields used for grouping the items.
+	 * @param APPLY - The list of transformation rules specifying how to apply operations (e.g., AVG, MAX) to the grouped items.
+	 * @returns The transformed item, which includes the GROUP values and the result of the APPLY transformations.
+	 * @throws InsightError - Throws an error if the transformation cannot be applied or if the grouping is invalid.
+	 */
+	private processGroup(
+		groupKey: string,
+		groupItems: Section[] | Room[],
+		GROUP: string[],
+		APPLY: any[]
+	): Record<string, any> {
+		const transformedItem: Record<string, any> = {};
+
+		// Assign GROUP keys to transformed item
+		GROUP.forEach((key, index) => { // key is name of field ("sections_title")
+			transformedItem[key] = groupKey.split("|")[index]; // splits key into array: "Math|101" => ["Math", "101"]
+		}); // returns like {"sections_title": "Math", "room_number": "101"}
+
+		// Process APPLY transformations
+		for (const applyRule of APPLY) {
+			const applyKey = Object.keys(applyRule)[0]; // Name of the computed field
+			const applyObj = applyRule[applyKey];
+
+			const applyOperator = Object.keys(applyObj)[0];
+			const field = applyObj[applyOperator];
+
+			transformedItem[applyKey] = this.computeApplyOperation(applyOperator, field, groupItems);
+		}
+
+		return transformedItem;
+	}
+
+	/**
+	 * Groups the dataset by the specified GROUP keys (Sections or Rooms).
+	 * @param dataset - The dataset to group (Sections or Rooms).
+	 * @param GROUP - The GROUP keys used to group the dataset.
+	 * @returns A tuple containing two maps: one for sections and one for rooms.
+	 */
+	private groupByKeys(
+		dataset: Section[] | Room[],
+		GROUP: string[]
+	): [Map<string, Section[]>, Map<string, Room[]>] {
+		const sectionGroups = new Map<string, Section[]>();
+		const roomGroups = new Map<string, Room[]>();
+
+		dataset.forEach(item => {
+			// Loop over the Group Columns and create a unique key based on GROUP values
+			const groupKey = GROUP.map((key) =>
+				item instanceof Section
+					? SectionHelper.getSectionValue(item, key)
+					: RoomHelper.getRoomValue(item, key)
+			).join("|"); // i.e., groupKey = ["Math 101", "Dr. Smith"].join("|") => "Math 101|Dr. Johnson"
+
+			// Add to appropriate group (Section or Room)
+			if (item instanceof Section) {
+				if (!sectionGroups.has(groupKey)) {
+					sectionGroups.set(groupKey, []);
+				}
+				sectionGroups.get(groupKey)!.push(item);
+			} else {
+				if (!roomGroups.has(groupKey)) {
+					roomGroups.set(groupKey, []);
+				}
+				roomGroups.get(groupKey)!.push(item);
+			}
+		});
+
+		return [sectionGroups, roomGroups];
+	}
+
+	/**
+	 * TODO.
+	 * @param query - TODO.
+	 * @param dataset - TODO.
+	 * @returns TODO.
+	 * @throws InsightError TODO.
+	 */
+	private handleTransformations(
+		query: Record<string, any>,
+		dataset: Section[] | Room[]
+	): any[] {
+		if (!query.TRANSFORMATIONS) {
+			return dataset; // No transformations, return as-is
+		}
+
+		const { GROUP, APPLY } = query.TRANSFORMATIONS;
+
+		if (!Array.isArray(GROUP) || !Array.isArray(APPLY)) {
+			throw new InsightError("Invalid TRANSFORMATIONS format");
+		}
+
+		// Step 1: Group dataset by GROUP keys
+		const [sectionGroups, roomGroups] = this.groupByKeys(dataset, GROUP);
+
+		// Step 2: Apply aggregations
+		const transformedData: any[] = [];
+		for (const [groupKey, groupItems] of sectionGroups.entries()) {
+			transformedData.push(this.processGroup(groupKey, groupItems, GROUP, APPLY));
+		}
+
+		for (const [groupKey, groupItems] of roomGroups.entries()) {
+			transformedData.push(this.processGroup(groupKey, groupItems, GROUP, APPLY));
+		}
+
+		return transformedData;
+	}
+
+	/**
 	 * Processes the OPTIONS section of the query, applying sorting and selecting specified columns.
 	 * @param options - The OPTIONS clause of the query, containing COLUMNS and optionally ORDER.
 	 * @param content - The array of sections or rooms that match the query conditions.
@@ -275,7 +428,15 @@ export class QueryEngine {
 			throw new InsightError(`Dataset with ID '${datasetId}' not found.`);
 		}
 
-		const queriedContent: Section[] | Room[] = this.handleWhere(query.WHERE ?? {}, dataset);
+		// Filter dataset using WHERE
+		let queriedContent: Section[] | Room[] = this.handleWhere(query.WHERE ?? {}, dataset);
+
+		// Handle TRANSFORMATIONS if present
+		if (query.TRANSFORMATIONS) {
+			queriedContent = this.handleTransformations(query.TRANSFORMATIONS, queriedContent);
+		}
+
+		// Apply OPTIONS (select columns, order results)
 		return this.handleOptions(query.OPTIONS ?? {}, queriedContent);
 	}
 }
