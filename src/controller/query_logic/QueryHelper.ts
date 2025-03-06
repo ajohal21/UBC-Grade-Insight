@@ -20,7 +20,13 @@ export class QueryHelper {
 		const datasetIds = new Set<string>();
 		this.extractDatasetIds(query.WHERE, datasetIds, validKeys);
 
-		query.OPTIONS.COLUMNS.forEach(column => datasetIds.add(column.split("_")[0]));
+		query.OPTIONS.COLUMNS.forEach(column => {
+			if (column.includes("_")) {  // Check if the column name has an underscore
+				datasetIds.add(column.split("_")[0]); // Extract dataset ID if it does
+			} else {
+				datasetIds.add("sections"); // Otherwise, assume it's from the "sections" dataset
+			}
+		});
 
 		if (query.OPTIONS.ORDER) {
 			const orderKeys = typeof query.OPTIONS.ORDER === "string" ? [query.OPTIONS.ORDER] : query.OPTIONS.ORDER.keys;

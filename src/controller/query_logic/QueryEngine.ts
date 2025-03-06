@@ -245,10 +245,18 @@ export class QueryEngine {
 		switch (operator) {
 			case "AVG":
 				// Ensure the values are numbers
-				return (values as number[]).reduce((sum, val) => sum + val, 0) / values.length;
+				const Decimal = require('decimal.js');
+
+				let total = new Decimal(0);
+				for (const val of (values as number[])) {
+					total = total.add(new Decimal(val));
+				}
+				const avg = total.toNumber() / values.length;
+				return Number(avg.toFixed(2));
 			case "SUM":
 				// Ensure the values are numbers
-				return numericValues.reduce((sum, val) => isNaN(val) ? sum : sum + val, 0);
+				const summ = numericValues.reduce((sum, val) => isNaN(val) ? sum : sum + val, 0);
+				return parseFloat(summ.toFixed(2));
 			case "COUNT":
 				return new Set(values).size;
 			case "MAX":
@@ -394,14 +402,17 @@ export class QueryEngine {
 			this.handleSort(options.ORDER, columns, content);
 		}
 
-		// Transform each section or room into an InsightResult object
+
+		// // Transform each section or room into an InsightResult object
 		return content.map((section_or_room) => {
 			const result: InsightResult = {};
 			for (const column of columns) {
 				if (section_or_room instanceof Section) {
 					result[column] = SectionHelper.getSectionValue(section_or_room, column);
-				} else {
+				} else if (section_or_room instanceof Room) {
 					result[column] = RoomHelper.getRoomValue(section_or_room, column);
+				} else {
+					result[column] = section_or_room[column];
 				}
 			}
 			return result;
@@ -419,6 +430,7 @@ export class QueryEngine {
 		const query: Query = {
 			WHERE: rawQuery.WHERE,
 			OPTIONS: rawQuery.OPTIONS,
+			TRANSFORMATIONS: rawQuery.TRANSFORMATIONS
 		};
 
 		const datasetId = QueryHelper.validateQuery(query, this.validKeys);
@@ -433,7 +445,7 @@ export class QueryEngine {
 
 		// Handle TRANSFORMATIONS if present
 		if (query.TRANSFORMATIONS) {
-			queriedContent = this.handleTransformations(query.TRANSFORMATIONS, queriedContent);
+			queriedContent = this.handleTransformations(query, queriedContent);
 		}
 
 		// Apply OPTIONS (select columns, order results)

@@ -812,6 +812,9 @@ describe("InsightFacade", function () {
 		it("[valid/order_by_ins_and_dept_up.json] valid sort up by two columns", checkQuery);
 		it("[valid/use_rooms.json] test using rooms datatype", checkQuery);
 		it("[valid/validPlainRoom.json] test using rooms to see plain output", checkQuery);
+		it("[valid/validMaxTest.json] test Max", checkQuery);
+		it("[valid/validOverallAvg.json] test overall avg", checkQuery);
+		it("[valid/validOverallSum.json] test overall sum", checkQuery);
 
 		//Invalid
 		it("[invalid/invalid.json] Query missing WHERE", checkQuery);
