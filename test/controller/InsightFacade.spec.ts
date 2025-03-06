@@ -821,6 +821,7 @@ describe("InsightFacade", function () {
 		it("[valid/validRoomVeryComplicated.json] test Room very Complicated", checkQuery);
 		it("[valid/validMinMax.json] test min max", checkQuery);
 		it("[valid/validApplySum.json] valid apply sum", checkQuery);
+		it("[valid/validOnlyApplyColumns.json] no dataset id in WHERE or OPTIONS", checkQuery);
 
 		//Invalid
 		it("[invalid/invalid.json] Query missing WHERE", checkQuery);
@@ -839,5 +840,7 @@ describe("InsightFacade", function () {
 		it("[invalid/invalidKeyInWhereClause.json] invalid key in where clause", checkQuery);
 		it("[invalid/invalidTransformation.json] invalid key in where clause", checkQuery);
 		it("[invalid/invalidTransformationNoApply.json] invalid key in where clause", checkQuery);
+		it("[invalid/invalidFilterKey.json] invalid filter key", checkQuery);
+		it("[invalid/invalidKeyInOptions.json] invalid key in options", checkQuery);
 	});
 });

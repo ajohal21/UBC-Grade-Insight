@@ -1,0 +1,315 @@
+{
+	"title": "validOnlyApplyColumns",
+	"input": {
+		"WHERE": {},
+		"OPTIONS": {
+			"COLUMNS": [
+				"minSeats",
+				"maxSeats",
+				"minLat",
+				"maxLat"
+			],
+			"ORDER": {
+				"dir": "DOWN",
+				"keys": [
+					"minLat",
+					"maxLat"
+				]
+			}
+		},
+		"TRANSFORMATIONS": {
+			"GROUP": [
+				"rooms_shortname"
+			],
+			"APPLY": [
+				{
+					"minSeats": {
+						"MIN": "rooms_seats"
+					}
+				},
+				{
+					"maxSeats": {
+						"MAX": "rooms_seats"
+					}
+				},
+				{
+					"minLat": {
+						"MIN": "rooms_lat"
+					}
+				},
+				{
+					"maxLat": {
+						"MAX": "rooms_lat"
+					}
+				}
+			]
+		}
+	},
+	"errorExpected": false,
+	"expected": [
+		{
+			"minSeats": 50,
+			"maxSeats": 100,
+			"minLat": 49.27106,
+			"maxLat": 49.27106
+		},
+		{
+			"minSeats": 20,
+			"maxSeats": 94,
+			"minLat": 49.2699,
+			"maxLat": 49.2699
+		},
+		{
+			"minSeats": 26,
+			"maxSeats": 90,
+			"minLat": 49.26958,
+			"maxLat": 49.26958
+		},
+		{
+			"minSeats": 30,
+			"maxSeats": 55,
+			"minLat": 49.26867,
+			"maxLat": 49.26867
+		},
+		{
+			"minSeats": 24,
+			"maxSeats": 70,
+			"minLat": 49.26862,
+			"maxLat": 49.26862
+		},
+		{
+			"minSeats": 299,
+			"maxSeats": 299,
+			"minLat": 49.2683,
+			"maxLat": 49.2683
+		},
+		{
+			"minSeats": 18,
+			"maxSeats": 275,
+			"minLat": 49.26826,
+			"maxLat": 49.26826
+		},
+		{
+			"minSeats": 20,
+			"maxSeats": 94,
+			"minLat": 49.26767,
+			"maxLat": 49.26767
+		},
+		{
+			"minSeats": 8,
+			"maxSeats": 154,
+			"minLat": 49.26766,
+			"maxLat": 49.26766
+		},
+		{
+			"minSeats": 20,
+			"maxSeats": 21,
+			"minLat": 49.2666,
+			"maxLat": 49.2666
+		},
+		{
+			"minSeats": 25,
+			"maxSeats": 224,
+			"minLat": 49.266463,
+			"maxLat": 49.266463
+		},
+		{
+			"minSeats": 25,
+			"maxSeats": 40,
+			"minLat": 49.2663,
+			"maxLat": 49.2663
+		},
+		{
+			"minSeats": 30,
+			"maxSeats": 257,
+			"minLat": 49.26627,
+			"maxLat": 49.26627
+		},
+		{
+			"minSeats": 54,
+			"maxSeats": 375,
+			"minLat": 49.2661,
+			"maxLat": 49.2661
+		},
+		{
+			"minSeats": 106,
+			"maxSeats": 106,
+			"minLat": 49.266089,
+			"maxLat": 49.266089
+		},
+		{
+			"minSeats": 21,
+			"maxSeats": 225,
+			"minLat": 49.26605,
+			"maxLat": 49.26605
+		},
+		{
+			"minSeats": 90,
+			"maxSeats": 265,
+			"minLat": 49.2659,
+			"maxLat": 49.2659
+		},
+		{
+			"minSeats": 42,
+			"maxSeats": 205,
+			"minLat": 49.26545,
+			"maxLat": 49.26545
+		},
+		{
+			"minSeats": 160,
+			"maxSeats": 160,
+			"minLat": 49.26541,
+			"maxLat": 49.26541
+		},
+		{
+			"minSeats": 102,
+			"maxSeats": 325,
+			"minLat": 49.26517,
+			"maxLat": 49.26517
+		},
+		{
+			"minSeats": 16,
+			"maxSeats": 260,
+			"minLat": 49.26486,
+			"maxLat": 49.26486
+		},
+		{
+			"minSeats": 16,
+			"maxSeats": 228,
+			"minLat": 49.26479,
+			"maxLat": 49.26479
+		},
+		{
+			"minSeats": 10,
+			"maxSeats": 503,
+			"minLat": 49.26478,
+			"maxLat": 49.26478
+		},
+		{
+			"minSeats": 12,
+			"maxSeats": 68,
+			"minLat": 49.2643,
+			"maxLat": 49.2643
+		},
+		{
+			"minSeats": 12,
+			"maxSeats": 66,
+			"minLat": 49.2642,
+			"maxLat": 49.2642
+		},
+		{
+			"minSeats": 12,
+			"maxSeats": 99,
+			"minLat": 49.26414,
+			"maxLat": 49.26414
+		},
+		{
+			"minSeats": 24,
+			"maxSeats": 40,
+			"minLat": 49.264,
+			"maxLat": 49.264
+		},
+		{
+			"minSeats": 20,
+			"maxSeats": 280,
+			"minLat": 49.26398,
+			"maxLat": 49.26398
+		},
+		{
+			"minSeats": 144,
+			"maxSeats": 144,
+			"minLat": 49.26372,
+			"maxLat": 49.26372
+		},
+		{
+			"minSeats": 27,
+			"maxSeats": 190,
+			"minLat": 49.26293,
+			"maxLat": 49.26293
+		},
+		{
+			"minSeats": 80,
+			"maxSeats": 350,
+			"minLat": 49.26274,
+			"maxLat": 49.26274
+		},
+		{
+			"minSeats": 22,
+			"maxSeats": 100,
+			"minLat": 49.26273,
+			"maxLat": 49.26273
+		},
+		{
+			"minSeats": 125,
+			"maxSeats": 350,
+			"minLat": 49.26236,
+			"maxLat": 49.26236
+		},
+		{
+			"minSeats": 7,
+			"maxSeats": 236,
+			"minLat": 49.26229,
+			"maxLat": 49.26229
+		},
+		{
+			"minSeats": 60,
+			"maxSeats": 200,
+			"minLat": 49.26228,
+			"maxLat": 49.26228
+		},
+		{
+			"minSeats": 50,
+			"maxSeats": 50,
+			"minLat": 49.26228,
+			"maxLat": 49.26228
+		},
+		{
+			"minSeats": 426,
+			"maxSeats": 426,
+			"minLat": 49.26207,
+			"maxLat": 49.26207
+		},
+		{
+			"minSeats": 35,
+			"maxSeats": 63,
+			"minLat": 49.26176,
+			"maxLat": 49.26176
+		},
+		{
+			"minSeats": 40,
+			"maxSeats": 136,
+			"minLat": 49.26176,
+			"maxLat": 49.26176
+		},
+		{
+			"minSeats": 40,
+			"maxSeats": 160,
+			"minLat": 49.26125,
+			"maxLat": 49.26125
+		},
+		{
+			"minSeats": 6,
+			"maxSeats": 200,
+			"minLat": 49.26114,
+			"maxLat": 49.26114
+		},
+		{
+			"minSeats": 16,
+			"maxSeats": 72,
+			"minLat": 49.26048,
+			"maxLat": 49.26048
+		},
+		{
+			"minSeats": 39,
+			"maxSeats": 442,
+			"minLat": 49.26047,
+			"maxLat": 49.26047
+		},
+		{
+			"minSeats": 18,
+			"maxSeats": 250,
+			"minLat": 49.26044,
+			"maxLat": 49.26044
+		}
+	]
+}

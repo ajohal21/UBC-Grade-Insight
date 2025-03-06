@@ -1,0 +1,28 @@
+{
+	"title": "invalidFilterKey",
+	"input": {
+		"WHERE": {
+			"AND": [
+				{
+					"GT": {
+						"sections_avg": 90
+					}
+				},
+				{
+					"AT": {
+						"sections_dept": "cpsc"
+					}
+				}
+			]
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_dept",
+				"sections_avg"
+			],
+			"ORDER": "sections_avg"
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}

@@ -5,7 +5,129 @@ import {SectionHelper} from "./SectionHelper";
 import {RoomHelper} from "./RoomHelper";
 import { InsightError } from "../IInsightFacade";
 
+type ApplyRule = {
+	[key: string]: {
+		[aggFunc: string]: string;  // e.g., "MAX": "some_field"
+	};
+};
+
 export class QueryHelper {
+
+	/**
+	 * Checks if two sets contain the same elements.
+	 */
+	private static areSetsEqual(setA: Set<string>, setB: Set<string>): boolean {
+		if (setA.size !== setB.size) {
+			return false;
+		}
+
+		for (const item of setA) {
+			if (!setB.has(item)) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	private static processApplyRules(APPLY: Array<Record<string,
+		Record<string, string>>>, datasetIds: Set<string>,
+									 addedColumnsTransformations: Set<string>): void {
+		APPLY.forEach((applyRule: ApplyRule) => {
+			const applyKeys = Object.keys(applyRule);
+			if (applyKeys.length !== 1) {
+				throw new InsightError("Invalid APPLY rule: Each rule must have exactly one key.");
+			}
+
+			const applyKey = applyKeys[0]; // Extract added column name
+			addedColumnsTransformations.add(applyKey);
+
+			const applyObj = applyRule[applyKey]; // Get aggregation object
+
+			if (typeof applyObj === "object" && applyObj !== null) {
+				const field = Object.values(applyObj)[0]; // Extract field name
+
+				if (typeof field === "string" && field.includes("_")) {
+					datasetIds.add(field.split("_")[0]);
+				}
+			}
+		});
+	}
+
+	/**
+	 * Extracts dataset IDs from TRANSFORMATIONS.
+	 */
+	private static extractDatasetIdsFromTransformations(transformations: any,
+														datasetIds: Set<string>,
+														addedColumns: Set<string>): void {
+		const { GROUP, APPLY } = transformations;
+
+		const validKeys = new Set(["GROUP", "APPLY"]);
+		const transformationKeys = new Set(Object.keys(transformations));
+
+		if (!this.areSetsEqual(validKeys, transformationKeys)) {
+			throw new InsightError(
+				`Invalid TRANSFORMATIONS: Contains unexpected keys. Allowed keys are ${Array.from(validKeys).join(", ")}.`
+			);
+		}
+
+		if (!Array.isArray(GROUP) || GROUP.length === 0) {
+			throw new InsightError("Invalid TRANSFORMATIONS: GROUP must be a non-empty array.");
+		}
+
+		GROUP.forEach(column => {
+			if (column.includes("_")) {
+				datasetIds.add(column.split("_")[0]);
+			}
+		});
+
+		const addedColumnsTransformations = new Set<string>();
+		this.processApplyRules(APPLY, datasetIds, addedColumnsTransformations);
+
+		if (!this.areSetsEqual(addedColumns, addedColumnsTransformations)) {
+			throw new InsightError("Invalid TRANSFORMATIONS: All added columns in OPTIONS must be used in APPLY.");
+		}
+	}
+
+	private static processOptions(options: Query["OPTIONS"], datasetIds: Set<string>, addedColumns: Set<string>): void {
+		if (!options?.COLUMNS) {
+			throw new InsightError("Invalid OPTIONS: COLUMNS must be defined.");
+		}
+
+		// Handle COLUMNS
+		options.COLUMNS.forEach(column => {
+			if (column.includes("_")) {
+				datasetIds.add(column.split("_")[0]);
+			} else {
+				addedColumns.add(column);
+			}
+		});
+
+		// Handle ORDER
+		if (options.ORDER) {
+			if (typeof options.ORDER === "string") {
+				// Single column order case
+				const column = options.ORDER;
+				if (column.includes("_")) {
+					datasetIds.add(column.split("_")[0]);
+				} else {
+					addedColumns.add(column);
+				}
+			} else if (typeof options.ORDER === "object" && Array.isArray(options.ORDER.keys)) {
+				// Multiple keys in ORDER case
+				options.ORDER.keys.forEach(column => {
+					if (column.includes("_")) {
+						datasetIds.add(column.split("_")[0]);
+					} else {
+						addedColumns.add(column);
+					}
+				});
+			} else {
+				throw new InsightError("Invalid ORDER format.");
+			}
+		}
+	}
+
 	/**
 	 * Validates a query against dataset requirements.
 	 * @param query - The query to validate.
@@ -27,21 +149,17 @@ export class QueryHelper {
 		// 		datasetIds.add("sections"); // Otherwise, assume it's from the "sections" dataset
 		// 	}
 		// });
-		const datasetMappings: { [key: string]: string } = {
-			"someRoomColumn": "rooms",
-			"someSectionColumn": "sections",
-		};
+		// const datasetMappings: { [key: string]: string } = {
+		// 	"someRoomColumn": "rooms",
+		// 	"someSectionColumn": "sections",
+		// };
 
+		const addedColumns = new Set<string>();
+		this.processOptions(query.OPTIONS, datasetIds, addedColumns);
 
-		query.OPTIONS.COLUMNS.forEach(column => {
-			if (column.includes("_")) {
-				datasetIds.add(column.split("_")[0]);
-			} else {
-				if (datasetMappings[column]) {
-					datasetIds.add(datasetMappings[column]);
-				}
-			}
-		});
+		if (query.TRANSFORMATIONS) {
+			this.extractDatasetIdsFromTransformations(query.TRANSFORMATIONS, datasetIds, addedColumns);
+		}
 
 		if (datasetIds.size !== 1) {
 			throw new InsightError(`Invalid query: Must reference exactly one dataset, found: ${Array.from(datasetIds).join(", ")}`);

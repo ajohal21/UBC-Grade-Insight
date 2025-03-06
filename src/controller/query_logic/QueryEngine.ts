@@ -317,13 +317,9 @@ export class QueryEngine {
 		return transformedItem;
 	}
 
-// Helper function to determine if a field should be a number
+     // Helper function to determine if a field should be a number
 	private shouldBeNumber(key: string): boolean {
-		// Implement your logic here. For example:
-		if ( key.endsWith("_lat") || key.endsWith("_lon") || key.endsWith("_seats")) {
-			return true;
-		}
-		return false;
+		return key.endsWith("_lat") || key.endsWith("_lon") || key.endsWith("_seats");
 	}
 
 	/**
@@ -413,6 +409,13 @@ export class QueryEngine {
 			throw new ResultTooLargeError(`Query result too large.`);
 		}
 
+		const optionsArray = ["COLUMNS", "ORDER"];
+		for (const key in options) {
+			if (!optionsArray.includes(key)) {
+				throw new InsightError(`Unrecognized Options key: '${key}'`);
+			}
+		}
+
 		const columns: string[] = options.COLUMNS ?? [];
 
 		// Validate ORDER in COLUMNS if it exists, and sort if so
@@ -422,7 +425,7 @@ export class QueryEngine {
 		}
 
 
-		// // Transform each section or room into an InsightResult object
+		// Transform each section or room into an InsightResult object
 		return content.map((section_or_room) => {
 			const result: InsightResult = {};
 			for (const column of columns) {
