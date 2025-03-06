@@ -815,6 +815,9 @@ describe("InsightFacade", function () {
 		it("[valid/validMaxTest.json] test Max", checkQuery);
 		it("[valid/validOverallAvg.json] test overall avg", checkQuery);
 		it("[valid/validOverallSum.json] test overall sum", checkQuery);
+		it("[valid/validOverallMin.json] test overall min", checkQuery);
+		it("[valid/validOverallCount.json] test overall count", checkQuery);
+		it("[valid/validRoomComplicated.json] test Room Complicated", checkQuery);
 
 		//Invalid
 		it("[invalid/invalid.json] Query missing WHERE", checkQuery);

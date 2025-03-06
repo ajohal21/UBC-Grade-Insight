@@ -20,18 +20,28 @@ export class QueryHelper {
 		const datasetIds = new Set<string>();
 		this.extractDatasetIds(query.WHERE, datasetIds, validKeys);
 
+		// query.OPTIONS.COLUMNS.forEach(column => {
+		// 	if (column.includes("_")) {  // Check if the column name has an underscore
+		// 		datasetIds.add(column.split("_")[0]); // Extract dataset ID if it does
+		// 	} else {
+		// 		datasetIds.add("sections"); // Otherwise, assume it's from the "sections" dataset
+		// 	}
+		// });
+		const datasetMappings: { [key: string]: string } = {
+			"someRoomColumn": "rooms",
+			"someSectionColumn": "sections",
+		};
+
+
 		query.OPTIONS.COLUMNS.forEach(column => {
-			if (column.includes("_")) {  // Check if the column name has an underscore
-				datasetIds.add(column.split("_")[0]); // Extract dataset ID if it does
+			if (column.includes("_")) {
+				datasetIds.add(column.split("_")[0]);
 			} else {
-				datasetIds.add("sections"); // Otherwise, assume it's from the "sections" dataset
+				if (datasetMappings[column]) {
+					datasetIds.add(datasetMappings[column]);
+				}
 			}
 		});
-
-		if (query.OPTIONS.ORDER) {
-			const orderKeys = typeof query.OPTIONS.ORDER === "string" ? [query.OPTIONS.ORDER] : query.OPTIONS.ORDER.keys;
-			orderKeys.forEach(key => datasetIds.add(key.split("_")[0]));
-		}
 
 		if (datasetIds.size !== 1) {
 			throw new InsightError(`Invalid query: Must reference exactly one dataset, found: ${Array.from(datasetIds).join(", ")}`);
