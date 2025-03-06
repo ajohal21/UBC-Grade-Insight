@@ -1,0 +1,26 @@
+{
+	"title": "invalidTransformation",
+	"input": {
+		"WHERE": {
+			"GT": {
+				"courses_avg": 70
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"courses_title"
+			]
+		},
+		"TRANSFORMATIONS": {
+			"APPLY": [
+				{
+					"coursesAvg": {
+						"AVG": "courses_avg"
+					}
+				}
+			]
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}

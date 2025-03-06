@@ -1,0 +1,260 @@
+{
+	"title": "ValidMinMax",
+	"input": {
+		"WHERE": {},
+		"OPTIONS": {
+			"COLUMNS": [
+				"rooms_shortname",
+				"minSeats",
+				"maxSeats"
+			],
+			"ORDER": {
+				"dir": "DOWN",
+				"keys": [
+					"minSeats",
+					"maxSeats"
+				]
+			}
+		},
+		"TRANSFORMATIONS": {
+			"GROUP": [
+				"rooms_shortname"
+			],
+			"APPLY": [
+				{
+					"minSeats": {
+						"MIN": "rooms_seats"
+					}
+				},
+				{
+					"maxSeats": {
+						"MAX": "rooms_seats"
+					}
+				}
+			]
+		}
+	},
+	"errorExpected": false,
+	"expected": [
+		{
+			"rooms_shortname": "CIRS",
+			"minSeats": 426,
+			"maxSeats": 426
+		},
+		{
+			"rooms_shortname": "SRC",
+			"minSeats": 299,
+			"maxSeats": 299
+		},
+		{
+			"rooms_shortname": "FRDM",
+			"minSeats": 160,
+			"maxSeats": 160
+		},
+		{
+			"rooms_shortname": "AERL",
+			"minSeats": 144,
+			"maxSeats": 144
+		},
+		{
+			"rooms_shortname": "LSC",
+			"minSeats": 125,
+			"maxSeats": 350
+		},
+		{
+			"rooms_shortname": "MATX",
+			"minSeats": 106,
+			"maxSeats": 106
+		},
+		{
+			"rooms_shortname": "WESB",
+			"minSeats": 102,
+			"maxSeats": 325
+		},
+		{
+			"rooms_shortname": "CHEM",
+			"minSeats": 90,
+			"maxSeats": 265
+		},
+		{
+			"rooms_shortname": "ESB",
+			"minSeats": 80,
+			"maxSeats": 350
+		},
+		{
+			"rooms_shortname": "CHBE",
+			"minSeats": 60,
+			"maxSeats": 200
+		},
+		{
+			"rooms_shortname": "HEBB",
+			"minSeats": 54,
+			"maxSeats": 375
+		},
+		{
+			"rooms_shortname": "IONA",
+			"minSeats": 50,
+			"maxSeats": 100
+		},
+		{
+			"rooms_shortname": "EOSM",
+			"minSeats": 50,
+			"maxSeats": 50
+		},
+		{
+			"rooms_shortname": "LSK",
+			"minSeats": 42,
+			"maxSeats": 205
+		},
+		{
+			"rooms_shortname": "DMP",
+			"minSeats": 40,
+			"maxSeats": 160
+		},
+		{
+			"rooms_shortname": "MCLD",
+			"minSeats": 40,
+			"maxSeats": 136
+		},
+		{
+			"rooms_shortname": "OSBO",
+			"minSeats": 39,
+			"maxSeats": 442
+		},
+		{
+			"rooms_shortname": "FORW",
+			"minSeats": 35,
+			"maxSeats": 63
+		},
+		{
+			"rooms_shortname": "HENN",
+			"minSeats": 30,
+			"maxSeats": 257
+		},
+		{
+			"rooms_shortname": "UCLL",
+			"minSeats": 30,
+			"maxSeats": 55
+		},
+		{
+			"rooms_shortname": "SWNG",
+			"minSeats": 27,
+			"maxSeats": 190
+		},
+		{
+			"rooms_shortname": "ANSO",
+			"minSeats": 26,
+			"maxSeats": 90
+		},
+		{
+			"rooms_shortname": "MATH",
+			"minSeats": 25,
+			"maxSeats": 224
+		},
+		{
+			"rooms_shortname": "MGYM",
+			"minSeats": 25,
+			"maxSeats": 40
+		},
+		{
+			"rooms_shortname": "BRKX",
+			"minSeats": 24,
+			"maxSeats": 70
+		},
+		{
+			"rooms_shortname": "PCOH",
+			"minSeats": 24,
+			"maxSeats": 40
+		},
+		{
+			"rooms_shortname": "CEME",
+			"minSeats": 22,
+			"maxSeats": 100
+		},
+		{
+			"rooms_shortname": "GEOG",
+			"minSeats": 21,
+			"maxSeats": 225
+		},
+		{
+			"rooms_shortname": "SCRF",
+			"minSeats": 20,
+			"maxSeats": 280
+		},
+		{
+			"rooms_shortname": "ALRD",
+			"minSeats": 20,
+			"maxSeats": 94
+		},
+		{
+			"rooms_shortname": "LASR",
+			"minSeats": 20,
+			"maxSeats": 94
+		},
+		{
+			"rooms_shortname": "AUDX",
+			"minSeats": 20,
+			"maxSeats": 21
+		},
+		{
+			"rooms_shortname": "BUCH",
+			"minSeats": 18,
+			"maxSeats": 275
+		},
+		{
+			"rooms_shortname": "FSC",
+			"minSeats": 18,
+			"maxSeats": 250
+		},
+		{
+			"rooms_shortname": "ANGU",
+			"minSeats": 16,
+			"maxSeats": 260
+		},
+		{
+			"rooms_shortname": "BIOL",
+			"minSeats": 16,
+			"maxSeats": 228
+		},
+		{
+			"rooms_shortname": "ORCH",
+			"minSeats": 16,
+			"maxSeats": 72
+		},
+		{
+			"rooms_shortname": "FNH",
+			"minSeats": 12,
+			"maxSeats": 99
+		},
+		{
+			"rooms_shortname": "SOWK",
+			"minSeats": 12,
+			"maxSeats": 68
+		},
+		{
+			"rooms_shortname": "SPPH",
+			"minSeats": 12,
+			"maxSeats": 66
+		},
+		{
+			"rooms_shortname": "WOOD",
+			"minSeats": 10,
+			"maxSeats": 503
+		},
+		{
+			"rooms_shortname": "IBLC",
+			"minSeats": 8,
+			"maxSeats": 154
+		},
+		{
+			"rooms_shortname": "PHRM",
+			"minSeats": 7,
+			"maxSeats": 236
+		},
+		{
+			"rooms_shortname": "MCML",
+			"minSeats": 6,
+			"maxSeats": 200
+		}
+	]
+}
