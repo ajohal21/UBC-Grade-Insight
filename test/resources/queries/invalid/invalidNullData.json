@@ -1,0 +1,19 @@
+{
+	"title": "invalidNullData",
+	"input": {
+		"WHERE": {
+			"IS": {
+				"null_dept": "cpsc"
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"null_dept",
+				"null_avg"
+			],
+			"ORDER": "null_avg"
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}

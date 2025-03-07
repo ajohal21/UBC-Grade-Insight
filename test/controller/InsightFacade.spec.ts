@@ -842,5 +842,12 @@ describe("InsightFacade", function () {
 		it("[invalid/invalidTransformationNoApply.json] invalid key in where clause", checkQuery);
 		it("[invalid/invalidFilterKey.json] invalid filter key", checkQuery);
 		it("[invalid/invalidKeyInOptions.json] invalid key in options", checkQuery);
+		it("[invalid/invalidNullData.json] invalid null", checkQuery);
+		it("[invalid/invalidOrderType.json] invalid ordertype", checkQuery);
+		it("[invalid/invalidNotReal.json] invalid not real type", checkQuery);
+		it("[invalid/invalidNotJson.json] invalid empty string", checkQuery);
+		it("[invalid/invalidWhereNull.json] invalid not real type", checkQuery);
+		it("[invalid/invalidColumnl.json] invalid column", checkQuery);
+
 	});
 });

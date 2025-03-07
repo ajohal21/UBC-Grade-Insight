@@ -1,0 +1,6 @@
+{
+	"title": "Query missing object",
+	"input": 123,
+	"errorExpected": true,
+	"expected": "InsightError"
+}
