@@ -1,0 +1,26 @@
+{
+	"title": "invalidExcessKeysInQuery",
+	"input": {
+		"WHERE": {
+			"IS": {
+				"sections_dept": "cpsc"
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_title",
+				"overallMax"
+			]
+		},
+		"TRANSFORMAIONS": {
+			"GROUP": [
+				"sections_title"
+			],
+			"APPLY": [
+				"ov"
+			]
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}

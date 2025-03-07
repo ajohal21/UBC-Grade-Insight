@@ -151,6 +151,10 @@ export class QueryHelper {
 					addedColumns.add(column);
 				}
 			} else if (typeof options.ORDER === "object" && Array.isArray(options.ORDER.keys)) {
+
+				if (options.ORDER.keys.length === 0) {
+					throw new InsightError("Order key must be non zero array");
+				}
 				// Multiple keys in ORDER case
 				options.ORDER.keys.forEach(column => {
 					if (column.includes("_")) {
