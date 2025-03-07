@@ -1,0 +1,23 @@
+{
+	"title": "invalidApplyMustBeArray",
+	"input": {
+		"WHERE": {
+			"IS": {
+				"sections_dept": "cpsc"
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_title"
+			]
+		},
+		"TRANSFORMATIONS": {
+			"GROUP": [
+				"sections_title"
+			],
+			"APPLY": 123
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}
