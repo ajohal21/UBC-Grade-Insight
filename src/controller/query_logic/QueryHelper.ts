@@ -101,6 +101,10 @@ export class QueryHelper {
 			throw new InsightError("Invalid TRANSFORMATIONS: GROUP must be a non-empty array.");
 		}
 
+		if (!Array.isArray(APPLY)) {
+			throw new InsightError("Invalid TRANSFORMATIONS: APPLY must be array.");
+		}
+
 		GROUP.forEach(column => {
 			if (column.includes("_")) {
 				datasetIds.add(column.split("_")[0]);
