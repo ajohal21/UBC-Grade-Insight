@@ -853,5 +853,13 @@ describe("InsightFacade", function () {
 		it("[invalid/invalidApplyMustBeArray.json] invalid WHERE value", checkQuery);
 		it("[invalid/invalidGroupEmptyArray.json] invalid WHERE value", checkQuery);
 		it("[invalid/invalidMaxNoInApply.json] invalid WHERE value", checkQuery);
+		it("[invalid/invalidApplyMustBeObject.json] invalid WHERE value", checkQuery);
+		it("[invalid/invalidKeyInApply.json] invalid WHERE value", checkQuery);
+		it("[invalid/invalidTransformationOperator.json] invalid WHERE value", checkQuery);
+		it("[invalid/invalidTransformationSpelling.json] invalid WHERE value", checkQuery);
+		it("[invalid/invalidOrderKeysNonEmptyArray.json] invalid WHERE value", checkQuery);
+		it("[invalid/invalidOrderDirection.json] invalid WHERE value", checkQuery);
+		it("[invalid/invalidOrderMissingDir.json] invalid WHERE value", checkQuery);
+		it("[invalid/invalidExcessKeysInQuery.json] invalid WHERE value", checkQuery);
 	});
 });
