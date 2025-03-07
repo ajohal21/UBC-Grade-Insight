@@ -14,7 +14,11 @@ type ApplyRule = {
 export class QueryHelper {
 
 	/**
-	 * Checks if two sets contain the same elements.
+	 * Compares two sets to check if they contain the same elements.
+	 *
+	 * @param setA - The first set to compare.
+	 * @param setB - The second set to compare.
+	 * @returns `true` if the sets are equal, otherwise `false`.
 	 */
 	private static areSetsEqual(setA: Set<string>, setB: Set<string>): boolean {
 		if (setA.size !== setB.size) {
@@ -30,6 +34,18 @@ export class QueryHelper {
 		return true;
 	}
 
+	/**
+	 * Processes the APPLY rules in the TRANSFORMATIONS section of the query.
+	 *
+	 * - Ensures each APPLY rule has exactly one key (the custom column name).
+	 * - Extracts dataset IDs from the aggregation field used in APPLY.
+	 * - Tracks added columns that must be referenced in OPTIONS.
+	 *
+	 * @param APPLY - An array of APPLY rules, each containing a single key-value pair.
+	 * @param datasetIds - A set to store dataset IDs referenced in APPLY rules.
+	 * @param addedColumnsTransformations - A set to track added columns from APPLY transformations.
+	 * @throws InsightError if an APPLY rule is incorrectly formatted.
+	 */
 	private static processApplyRules(APPLY: Array<Record<string,
 		Record<string, string>>>, datasetIds: Set<string>,
 									 addedColumnsTransformations: Set<string>): void {
@@ -55,7 +71,17 @@ export class QueryHelper {
 	}
 
 	/**
-	 * Extracts dataset IDs from TRANSFORMATIONS.
+	 * Extracts dataset IDs from the TRANSFORMATIONS section of the query.
+	 *
+	 * - Validates that TRANSFORMATIONS only contains the allowed keys: GROUP and APPLY.
+	 * - Ensures GROUP is a non-empty array and extracts dataset IDs from its fields.
+	 * - Processes APPLY rules to extract dataset IDs and track added columns.
+	 * - Verifies that all added columns in OPTIONS are used in APPLY.
+	 *
+	 * @param transformations - The TRANSFORMATIONS object from the query.
+	 * @param datasetIds - A set to store dataset IDs referenced in GROUP and APPLY.
+	 * @param addedColumns - A set containing columns added through APPLY transformations.
+	 * @throws InsightError if the TRANSFORMATIONS section is invalid.
 	 */
 	private static extractDatasetIdsFromTransformations(transformations: any,
 														datasetIds: Set<string>,
@@ -89,6 +115,13 @@ export class QueryHelper {
 		}
 	}
 
+	/**
+	 * Processes the OPTIONS section of a query to extract dataset IDs and added columns.
+	 * @param options - The OPTIONS part of the query, containing COLUMNS and optional ORDER.
+	 * @param datasetIds - A set to store dataset IDs extracted from column references.
+	 * @param addedColumns - A set to store columns that are not prefixed with a dataset ID.
+	 * @throws InsightError if OPTIONS is missing required fields or ORDER is incorrectly formatted.
+	 */
 	private static processOptions(options: Query["OPTIONS"], datasetIds: Set<string>, addedColumns: Set<string>): void {
 		if (!options?.COLUMNS) {
 			throw new InsightError("Invalid OPTIONS: COLUMNS must be defined.");
@@ -142,17 +175,11 @@ export class QueryHelper {
 		const datasetIds = new Set<string>();
 		this.extractDatasetIds(query.WHERE, datasetIds, validKeys);
 
-		// query.OPTIONS.COLUMNS.forEach(column => {
-		// 	if (column.includes("_")) {  // Check if the column name has an underscore
-		// 		datasetIds.add(column.split("_")[0]); // Extract dataset ID if it does
-		// 	} else {
-		// 		datasetIds.add("sections"); // Otherwise, assume it's from the "sections" dataset
-		// 	}
-		// });
-		// const datasetMappings: { [key: string]: string } = {
-		// 	"someRoomColumn": "rooms",
-		// 	"someSectionColumn": "sections",
-		// };
+		query.OPTIONS.COLUMNS.forEach(column => {
+			if (column.includes("_")) {  // Check if the column name has an underscore
+				datasetIds.add(column.split("_")[0]); // Extract dataset ID if it does
+			}
+		});
 
 		const addedColumns = new Set<string>();
 		this.processOptions(query.OPTIONS, datasetIds, addedColumns);
@@ -191,6 +218,21 @@ export class QueryHelper {
 	}
 
 	/**
+	 * Validates numeric filters (GT, LT, EQ) in the WHERE clause.
+	 * Ensures that the filter values are numbers.
+	 *
+	 * @param filter - The filter object to validate.
+	 * @throws InsightError if the filter contains a non-numeric value.
+	 */
+	private static validateNumericFilter(filter: Record<string, any>): void {
+		const [key, value] = Object.entries(filter)[0]; // Extract key-value pair
+
+		if (typeof value !== "number" || isNaN(value)) {
+			throw new InsightError(`Invalid numeric filter: ${key} must have a numeric value.`);
+		}
+	}
+
+	/**
 	 * Recursively evaluates a WHERE condition on a section.
 	 * @param filter - The filter condition (e.g., "AND", "OR", "GT", "LT", "EQ", "IS").
 	 * @param content - The section or room to evaluate against the filter.
@@ -198,19 +240,42 @@ export class QueryHelper {
 	 * @throws InsightError if the filter contains an unsupported condition type.
 	 */
 	public static evaluateCondition(filter: Record<string, any>, content: Section | Room): boolean {
+		if (!filter || typeof filter !== "object" || Object.keys(filter).length !== 1) {
+			throw new InsightError("Invalid WHERE clause: Malformed filter.");
+		}
+
 		const key = Object.keys(filter)[0];
+		const value = filter[key];
+
 		switch (key) {
 			case "AND":
-				return filter.AND.every((subCondition: any) => this.evaluateCondition(subCondition, content));
+				if (!Array.isArray(value) || value.length === 0) {
+					throw new InsightError("AND must contain a non-empty array of conditions.");
+				}
+				return value.every((subCondition) => this.evaluateCondition(subCondition, content));
+
 			case "OR":
-				return filter.OR.some((subCondition: any) => this.evaluateCondition(subCondition, content));
+				if (!Array.isArray(value) || value.length === 0) {
+					throw new InsightError("OR must contain a non-empty array of conditions.");
+				}
+				return value.some((subCondition) => this.evaluateCondition(subCondition, content));
+
 			case "NOT":
-				return !this.evaluateCondition(filter.NOT, content);
+				if (typeof value !== "object" || value === null) {
+					throw new InsightError("NOT must contain a valid condition.");
+				}
+				return !this.evaluateCondition(value, content);
+
+			case "IS":
+				return this.handleComparator(key, value, content);
+
 			case "GT":
 			case "LT":
 			case "EQ":
-			case "IS":
-				return this.handleComparator(key, filter[key], content);
+				const numValues = Object.values(value);
+				if (numValues.length !== 1 || typeof numValues[0] !== "number")
+					throw new InsightError(`Invalid numeric filter: ${key} must have a numeric value.`);
+				return this.handleComparator(key, value, content);
 			default:
 				throw new InsightError(`Unsupported filter type: ${key}`);
 		}

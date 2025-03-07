@@ -1,0 +1,19 @@
+{
+	"title": "invalid_more_than_one_id",
+	"input": {
+		"WHERE": {
+			"EQ": {
+				"sections_avg": 96
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_dept",
+				"rooms_type"
+			],
+			"ORDER": "sections_avg"
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}
