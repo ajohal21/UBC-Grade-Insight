@@ -824,7 +824,6 @@ describe("InsightFacade", function () {
 		it("[valid/validOnlyApplyColumns.json] no dataset id in WHERE or OPTIONS", checkQuery);
 		it("[valid/validTransformationNoApply.json] no dataset id in WHERE or OPTIONS", checkQuery);
 
-
 		//Invalid
 		it("[invalid/invalid.json] Query missing WHERE", checkQuery);
 		it("[invalid/invalid sections_dept cpsc AsterixInMiddle.json] sections_dept cp*sc asterix in middle", checkQuery);
