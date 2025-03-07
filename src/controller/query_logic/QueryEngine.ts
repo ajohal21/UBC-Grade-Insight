@@ -37,73 +37,6 @@ export class QueryEngine {
 	]);
 
 	/**
-	 * Evaluates an AND condition: all subconditions must be true for the overall condition to be true.
-	 * @param conditions - An array of conditions to be evaluated.
-	 * @param content - The section or room being evaluated against the conditions.
-	 * @returns `true` if all subconditions are true, otherwise `false`.
-	 */
-	private handleAND(conditions: any[], content: Section | Room): boolean {
-		return conditions.every((subCondition) => QueryHelper.evaluateCondition(subCondition, content));
-	}
-
-	/**
-	 * Evaluates an OR condition: at least one subcondition must be true for the overall condition to be true.
-	 * @param conditions - An array of conditions to be evaluated.
-	 * @param content - The section or room being evaluated against the conditions.
-	 * @returns `true` if at least one subcondition is true, otherwise `false`.
-	 */
-	private handleOR(conditions: any[], content: Section | Room): boolean {
-		return conditions.some((subCondition) => QueryHelper.evaluateCondition(subCondition, content));
-	}
-
-	/**
-	 * Handles comparisons using GT, LT, EQ, and IS operators.
-	 * @param operator - The comparison operator to use.
-	 * @param condition - The condition object containing the dataset key (e.g., "sections_avg") and the value.
-	 * @param content - The section being evaluated against the condition.
-	 * @returns `true` if the condition is satisfied, otherwise `false`.
-	 * @throws InsightError if the comparison operator is invalid or if the data types do not match the expected types.
-	 */
-	// NOLINTNEXTLINE
-	private handleComparator(
-		operator: "GT" | "LT" | "EQ" | "IS",
-		condition: Record<string, any>,
-		content: Section | Room
-	): boolean {
-		const datasetKey = Object.keys(condition)[0];
-		const column = datasetKey.split("_")[1];
-		const value = condition[datasetKey];
-
-		let contentValue: string | number;
-		if (content instanceof Section) {
-			contentValue = SectionHelper.getSectionValue(content, datasetKey);
-		} else {
-			contentValue = RoomHelper.getRoomValue(content, datasetKey);
-		}
-
-		// Use a helper function for the "IS" operator
-		if (operator === "IS") {
-			return QueryHelper.handleISComparator(contentValue, value);
-		}
-
-		// Handle numeric comparators
-		if (typeof contentValue !== "number") {
-			throw new InsightError(`Invalid query: '${column}' must be a numeric field for '${operator}' operator.`);
-		}
-
-		switch (operator) {
-			case "GT":
-				return contentValue > value;
-			case "LT":
-				return contentValue < value;
-			case "EQ":
-				return contentValue === value;
-			default:
-				throw new InsightError(`Invalid operator: '${operator}'.`);
-		}
-	}
-
-	/**
 	 * Filters sections in a dataset based on a WHERE condition.
 	 * @param where - The WHERE condition to evaluate.
 	 * @param dataset - The dataset containing the sections to filter.
@@ -113,10 +46,6 @@ export class QueryEngine {
 		if (Object.keys(where).length === 0) {
 			return dataset.getContent(); // No filtering needed
 		}
-
-		// return dataset.getContent().filter((content) => {
-		// 	return this.evaluateCondition(where, content);
-		// });
 
 		const datasetContent = dataset.getContent();
 		if (datasetContent.length > 0) {
@@ -224,12 +153,12 @@ export class QueryEngine {
 	}
 
 	/**
-	 * TODO.
-	 * @param operator - TODO.
-	 * @param field - TODO.
-	 * @param groupItems - TODO
-	 * @returns TODO.
-	 * @throws InsightError TODO.
+	 * Computes an aggregate operation on a group of sections or rooms.
+	 * @param operator - The aggregation operation to perform (AVG, SUM, COUNT, MAX, MIN).
+	 * @param field - The field on which the aggregation is performed.
+	 * @param groupItems - The array of sections or rooms to process.
+	 * @returns The computed aggregation result as a number.
+	 * @throws InsightError if the operator is invalid or values are not numbers (where required).
 	 */
 	private computeApplyOperation(
 		operator: string,
@@ -242,31 +171,41 @@ export class QueryEngine {
 				: RoomHelper.getRoomValue(item, field)
 		);
 
-		const numericValues = values.map(val => Number(val));
+		this.validateNumericValues(operator, values);
 
 		switch (operator) {
 			case "AVG":
-				// Ensure the values are numbers
-				const Decimal = require('decimal.js');
-
-				let total = new Decimal(0);
-				for (const val of (values as number[])) {
-					total = total.add(new Decimal(val));
+				const Decimal = require("decimal.js");
+				if (values.length === 0) {
+					throw new InsightError(`Cannot divide by 0 in AVG.`);
 				}
-				const avg = total.toNumber() / values.length;
-				return Number(avg.toFixed(2));
+				return Number(
+					(values.reduce((sum, val) => sum.add(new Decimal(val)), new Decimal(0))
+						.toNumber() / values.length).toFixed(2)
+				);
 			case "SUM":
-				// Ensure the values are numbers
-				const summ = numericValues.reduce((sum, val) => isNaN(val) ? sum : sum + val, 0);
-				return parseFloat(summ.toFixed(2));
+				return parseFloat((values as number[]).reduce((sum, val) => sum + val, 0).toFixed(2));
 			case "COUNT":
 				return new Set(values).size;
 			case "MAX":
-				return Math.max(...values.map(val => Number(val)));
+				return Math.max(...(values as number[]));
 			case "MIN":
-				return Math.min(...values.map(val => Number(val)));
+				return Math.min(...(values as number[]));
 			default:
 				throw new InsightError(`Invalid APPLY operation: ${operator}`);
+		}
+	}
+
+	/**
+	 * Validates that all values are numeric for applicable operations.
+	 * @param operator - The aggregation operator.
+	 * @param values - The array of values to validate.
+	 * @throws InsightError if values are not numeric for AVG, SUM, MAX, or MIN.
+	 */
+	private validateNumericValues(operator: string, values: any[]): void {
+		if (["AVG", "SUM", "MAX", "MIN"].includes(operator) &&
+			values.some(val => typeof val !== "number" || isNaN(val))) {
+			throw new InsightError(`Invalid ${operator} operation: All values must be numbers.`);
 		}
 	}
 
@@ -423,7 +362,6 @@ export class QueryEngine {
 		if ("ORDER" in options) {
 			this.handleSort(options.ORDER, columns, content);
 		}
-
 
 		// Transform each section or room into an InsightResult object
 		return content.map((section_or_room) => {
