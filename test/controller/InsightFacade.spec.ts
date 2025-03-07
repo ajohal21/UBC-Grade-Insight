@@ -822,6 +822,8 @@ describe("InsightFacade", function () {
 		it("[valid/validMinMax.json] test min max", checkQuery);
 		it("[valid/validApplySum.json] valid apply sum", checkQuery);
 		it("[valid/validOnlyApplyColumns.json] no dataset id in WHERE or OPTIONS", checkQuery);
+		it("[valid/validTransformationNoApply.json] no dataset id in WHERE or OPTIONS", checkQuery);
+
 
 		//Invalid
 		it("[invalid/invalid.json] Query missing WHERE", checkQuery);
@@ -851,5 +853,6 @@ describe("InsightFacade", function () {
 		it("[invalid/invalidWhereNull.json] invalid WHERE value", checkQuery);
 		it("[invalid/invalidApplyMustBeArray.json] invalid WHERE value", checkQuery);
 		it("[invalid/invalidGroupEmptyArray.json] invalid WHERE value", checkQuery);
+		it("[invalid/invalidMaxNoInApply.json] invalid WHERE value", checkQuery);
 	});
 });
