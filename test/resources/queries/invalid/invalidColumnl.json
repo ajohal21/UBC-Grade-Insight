@@ -1,0 +1,15 @@
+{
+	"title": "Query with invalid COLUMN type",
+	"input": {
+		"WHERE": {
+			"GT": {
+				"sections_avg": 90
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": 123
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}

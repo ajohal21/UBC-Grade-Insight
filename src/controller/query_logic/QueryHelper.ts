@@ -172,6 +172,10 @@ export class QueryHelper {
 			throw new InsightError("Invalid query: Missing required fields (WHERE or OPTIONS).");
 		}
 
+		if (!(query.OPTIONS?.COLUMNS instanceof Array) || query.OPTIONS?.COLUMNS.length === 0) {
+			throw new InsightError("Invalid query: Column must be non-empty array");
+		}
+
 		const datasetIds = new Set<string>();
 		this.extractDatasetIds(query.WHERE, datasetIds, validKeys);
 

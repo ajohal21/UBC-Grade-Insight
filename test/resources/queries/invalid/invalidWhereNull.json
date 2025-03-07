@@ -1,0 +1,9 @@
+{
+	"title": "Query with WHERE not being an object",
+	"input": {
+		"WHERE": null,
+		"OPTIONS": { "COLUMNS": ["sections_dept", "sections_avg"] }
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}
