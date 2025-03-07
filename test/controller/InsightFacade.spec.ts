@@ -843,5 +843,7 @@ describe("InsightFacade", function () {
 		it("[invalid/invalidFilterKey.json] invalid filter key", checkQuery);
 		it("[invalid/invalidKeyInOptions.json] invalid key in options", checkQuery);
 		it("[invalid/invalidColumnl.json] invalid key in options", checkQuery);
+		it("[invalid/invalid_more_than_one_id.json] references more than one dataset id", checkQuery);
+		it("[invalid/invalidNotJson.json] invalid WHERE value", checkQuery);
 	});
 });
