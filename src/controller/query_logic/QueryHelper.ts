@@ -184,6 +184,16 @@ export class QueryHelper {
 			throw new InsightError("Invalid query: Column must be non-empty array");
 		}
 
+		if (typeof query.OPTIONS.ORDER === "object" && Array.isArray(query.OPTIONS.ORDER.keys)) {
+			const orderKeys = query.OPTIONS.ORDER.keys;
+			const columns = new Set(query.OPTIONS.COLUMNS);
+
+			// Ensure all ORDER keys exist in COLUMNS
+			if (!orderKeys.every((key) => columns.has(key))) {
+				throw new InsightError("All ORDER keys must be present in COLUMNS.");
+			}
+		}
+
 		const datasetIds = new Set<string>();
 		this.extractDatasetIds(query.WHERE, datasetIds, validKeys);
 
@@ -197,6 +207,7 @@ export class QueryHelper {
 		this.processOptions(query.OPTIONS, datasetIds, addedColumns);
 
 		if (query.TRANSFORMATIONS) {
+			this.validateTransformations(query.TRANSFORMATIONS, query.OPTIONS.COLUMNS);
 			this.extractDatasetIdsFromTransformations(query.TRANSFORMATIONS, datasetIds, addedColumns);
 		}
 
@@ -205,6 +216,36 @@ export class QueryHelper {
 		}
 
 		return Array.from(datasetIds)[0];
+	}
+
+	/**
+	 * Validates that all GROUP and APPLY keys in TRANSFORMATIONS are present in COLUMNS.
+	 * @param transformations - The TRANSFORMATIONS object from the query.
+	 * @param columns - The list of columns in OPTIONS.COLUMNS.
+	 * @throws InsightError if GROUP or APPLY keys are missing in COLUMNS.
+	 */
+	private static validateTransformations(transformations: { GROUP: string[]; APPLY?: Array<Record<string,
+			Record<string, string>>> }, columns: string[]): void {
+		const columnsSet = new Set(columns);
+
+		// Ensure GROUP is a valid array
+		if (!Array.isArray(transformations.GROUP)) {
+			throw new InsightError("Invalid query: GROUP must be an array.");
+		}
+
+		// Ensure APPLY is an array (or default to empty)
+		const applyArray = transformations.APPLY ?? []; // Default to empty array if APPLY is undefined
+		if (!Array.isArray(applyArray)) {
+			throw new InsightError("Invalid query: APPLY must be an array.");
+		}
+
+		// Ensure all APPLY keys are in COLUMNS
+		for (const applyRule of applyArray) {
+			const applyKey = Object.keys(applyRule)[0]; // Get the APPLY key name
+			if (!columnsSet.has(applyKey)) {
+				throw new InsightError(`Invalid query: APPLY key '${applyKey}' must be present in COLUMNS.`);
+			}
+		}
 	}
 
 	/**

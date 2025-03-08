@@ -863,5 +863,7 @@ describe("InsightFacade", function () {
 		it("[invalid/invalidExcessKeysInQuery.json] invalid WHERE value", checkQuery);
 		it("[invalid/invalid_apply_not_in_columns.json] a key listed in APPLY is not in COLUMNS", checkQuery);
 		it("[invalid/invalid_avg_str_column.json] average of a string column", checkQuery);
+
+		it("[invalid/invalid_order_not_in_columns.json] ORDER not in COLUMNS", checkQuery);
 	});
 });
