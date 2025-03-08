@@ -823,6 +823,7 @@ describe("InsightFacade", function () {
 		it("[valid/validApplySum.json] valid apply sum", checkQuery);
 		it("[valid/validOnlyApplyColumns.json] no dataset id in WHERE or OPTIONS", checkQuery);
 		it("[valid/validTransformationNoApply.json] no dataset id in WHERE or OPTIONS", checkQuery);
+		it("[valid/validMinAndMax.json] MIN and MAX", checkQuery);
 
 		//Invalid
 		it("[invalid/invalid.json] Query missing WHERE", checkQuery);

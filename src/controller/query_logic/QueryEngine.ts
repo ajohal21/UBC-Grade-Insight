@@ -227,22 +227,48 @@ export class QueryEngine {
 		GROUP: string[],
 		APPLY: any[]
 	): Record<string, any> {
+		const transformedItem: Record<string, any> = this.processGroupKeys(groupKey, GROUP);
+		this.processApplyRules(transformedItem, APPLY, groupItems);
+		this.ensureNumericConsistency(transformedItem);
+		return transformedItem;
+	}
+
+	/**
+	 * Processes the group keys and assigns them to the transformed item.
+	 *
+	 * @param groupKey - The unique key that identifies the group, formed by joining the GROUP field values with "|".
+	 * @param GROUP - The list of fields used for grouping the items.
+	 * @returns The transformed item with the group keys assigned.
+	 */
+	private processGroupKeys(groupKey: string, GROUP: string[]): Record<string, any> {
 		const transformedItem: Record<string, any> = {};
 
-		// Assign GROUP keys to transformed item, preserving numbers
 		GROUP.forEach((key, index) => {
 			const value = groupKey.split("|")[index];
 
-			// Check if the field should be a number (you'll need to define this logic)
 			if (this.shouldBeNumber(key)) {
 				const parsedValue = parseFloat(value);
-				transformedItem[key] = isNaN(parsedValue) ? value : parsedValue; // if parse fails, return string.
+				transformedItem[key] = isNaN(parsedValue) ? value : parsedValue;
 			} else {
 				transformedItem[key] = value;
 			}
 		});
 
-		// Process APPLY transformations
+		return transformedItem;
+	}
+
+	/**
+	 * Processes the APPLY rules and applies the transformations to the transformed item.
+	 *
+	 * @param transformedItem - The transformed item to which the APPLY rules will be applied.
+	 * @param APPLY - The list of transformation rules specifying how to apply operations (e.g., AVG, MAX) to the grouped items.
+	 * @param groupItems - The array of items (either Section[] or Room[]) that belong to this group.
+	 */
+	private processApplyRules(
+		transformedItem: Record<string, any>,
+		APPLY: any[],
+		groupItems: Section[] | Room[]
+	): void {
 		for (const applyRule of APPLY) {
 			const applyKey = Object.keys(applyRule)[0];
 			const applyObj = applyRule[applyKey];
@@ -252,11 +278,101 @@ export class QueryEngine {
 
 			transformedItem[applyKey] = this.computeApplyOperation(applyOperator, field, groupItems);
 		}
-
-		return transformedItem;
 	}
 
-     // Helper function to determine if a field should be a number
+	/**
+	 * Ensures that numeric values are consistently handled for any results of APPLY (like AVG, MAX).
+	 *
+	 * @param transformedItem - The transformed item to ensure numeric consistency.
+	 */
+	private ensureNumericConsistency(transformedItem: Record<string, any>): void {
+		const validNumericKey = [
+			"year",
+			"avg",
+			"pass",
+			"fail",
+			"audit",
+			"lat",
+			"lon",
+			"seats",
+			"sections_avg",
+		];
+
+		Object.keys(transformedItem).forEach(key => {
+			if (validNumericKey.includes(key) && typeof transformedItem[key] === "string") {
+				transformedItem[key] = parseFloat(transformedItem[key]);
+			}
+		});
+	}
+
+	// /**
+	//  * Processes a group of items (either Section or Room) and applies transformations (e.g., aggregations).
+	//  *
+	//  * - The GROUP keys are used to split the groupKey, and then each item is processed according to APPLY.
+	//  *
+	//  * @param groupKey - The unique key that identifies the group, formed by joining the GROUP field values with "|".
+	//  * @param groupItems - The array of items (either Section[] or Room[]) that belong to this group.
+	//  * @param GROUP - The list of fields used for grouping the items.
+	//  * @param APPLY - The list of transformation rules specifying how to apply operations (e.g., AVG, MAX) to the grouped items.
+	//  * @returns The transformed item, which includes the GROUP values and the result of the APPLY transformations.
+	//  * @throws InsightError - Throws an error if the transformation cannot be applied or if the grouping is invalid.
+	//  */
+	// private processGroup(
+	// 	groupKey: string,
+	// 	groupItems: Section[] | Room[],
+	// 	GROUP: string[],
+	// 	APPLY: any[]
+	// ): Record<string, any> {
+	// 	const transformedItem: Record<string, any> = {};
+	//
+	// 	// Assign GROUP keys to transformed item, preserving numbers
+	// 	GROUP.forEach((key, index) => {
+	// 		const value = groupKey.split("|")[index];
+	//
+	// 		// Check if the field should be a number (you'll need to define this logic)
+	// 		if (this.shouldBeNumber(key)) {
+	// 			const parsedValue = parseFloat(value);
+	// 			transformedItem[key] = isNaN(parsedValue) ? value : parsedValue; // if parse fails, return string.
+	// 		} else {
+	// 			transformedItem[key] = value;
+	// 		}
+	// 	});
+	//
+	// 	// Process APPLY transformations
+	// 	for (const applyRule of APPLY) {
+	// 		const applyKey = Object.keys(applyRule)[0];
+	// 		const applyObj = applyRule[applyKey];
+	//
+	// 		const applyOperator = Object.keys(applyObj)[0];
+	// 		const field = applyObj[applyOperator];
+	//
+	// 		// Apply transformation (compute operation)
+	// 		transformedItem[applyKey] = this.computeApplyOperation(applyOperator, field, groupItems);
+	// 	}
+	//
+	// 	// Ensure that numeric values are consistently handled for any results of APPLY (like AVG, MAX)
+	// 	const validNumericKey = [
+	// 		"year",
+	// 		"avg",
+	// 		"pass",
+	// 		"fail",
+	// 		"audit",
+	// 		"lat",
+	// 		"lon",
+	// 		"seats",
+	// 		"sections_avg", // Ensure sections_avg is considered numeric
+	// 	];
+	//
+	// 	Object.keys(transformedItem).forEach(key => {
+	// 		if (validNumericKey.includes(key) && typeof transformedItem[key] === "string") {
+	// 			transformedItem[key] = parseFloat(transformedItem[key]);
+	// 		}
+	// 	});
+	//
+	// 	return transformedItem;
+	// }
+
+	// Helper function to determine if a field should be a number
 	private shouldBeNumber(key: string): boolean {
 		return key.endsWith("_lat") || key.endsWith("_lon") || key.endsWith("_seats");
 	}
