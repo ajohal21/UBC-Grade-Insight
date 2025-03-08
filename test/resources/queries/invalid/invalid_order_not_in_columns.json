@@ -1,0 +1,23 @@
+{
+	"title": "invalid_order_not_in_columns",
+	"input": {
+		"WHERE": {
+			"GT": {
+				"sections_avg": 70
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_title"
+			],
+			"ORDER": {
+				"dir": "UP",
+				"keys": [
+					"sections_avg"
+				]
+			}
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}
