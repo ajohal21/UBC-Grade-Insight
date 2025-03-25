@@ -76,7 +76,7 @@ function AddDatasetSimple({ onDatasetAdded }: AddDatasetProps) { // Receive the 
 
 	return (
 		<div>
-			<h1>Add Dataset (Simple)</h1>
+			<h1>Add Dataset: </h1>
 
 			<div>
 				<label htmlFor="datasetId">Dataset ID:</label>
