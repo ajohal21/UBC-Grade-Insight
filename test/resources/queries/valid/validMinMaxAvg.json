@@ -1,0 +1,373 @@
+{
+	"title": "validMinMaxAvg",
+	"input": {
+		"WHERE": {
+			"GT": {
+				"sections_avg": 96
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_avg",
+				"mini",
+				"maxi",
+				"avgg"
+			]
+		},
+		"TRANSFORMATIONS": {
+			"GROUP": [
+				"sections_avg"
+			],
+			"APPLY": [
+				{
+					"mini": {
+						"MIN": "sections_avg"
+					}
+				},
+				{
+					"maxi": {
+						"MAX": "sections_avg"
+					}
+				},
+				{
+					"avgg": {
+						"AVG": "sections_avg"
+					}
+				}
+			]
+		}
+	},
+	"errorExpected": false,
+	"expected": [
+		{
+			"sections_avg": 97,
+			"mini": 97,
+			"maxi": 97,
+			"avgg": 97
+		},
+		{
+			"sections_avg": 98,
+			"mini": 98,
+			"maxi": 98,
+			"avgg": 98
+		},
+		{
+			"sections_avg": 96.11,
+			"mini": 96.11,
+			"maxi": 96.11,
+			"avgg": 96.11
+		},
+		{
+			"sections_avg": 96.94,
+			"mini": 96.94,
+			"maxi": 96.94,
+			"avgg": 96.94
+		},
+		{
+			"sections_avg": 96.9,
+			"mini": 96.9,
+			"maxi": 96.9,
+			"avgg": 96.9
+		},
+		{
+			"sections_avg": 96.27,
+			"mini": 96.27,
+			"maxi": 96.27,
+			"avgg": 96.27
+		},
+		{
+			"sections_avg": 99.19,
+			"mini": 99.19,
+			"maxi": 99.19,
+			"avgg": 99.19
+		},
+		{
+			"sections_avg": 97.47,
+			"mini": 97.47,
+			"maxi": 97.47,
+			"avgg": 97.47
+		},
+		{
+			"sections_avg": 96.33,
+			"mini": 96.33,
+			"maxi": 96.33,
+			"avgg": 96.33
+		},
+		{
+			"sections_avg": 96.16,
+			"mini": 96.16,
+			"maxi": 96.16,
+			"avgg": 96.16
+		},
+		{
+			"sections_avg": 96.46,
+			"mini": 96.46,
+			"maxi": 96.46,
+			"avgg": 96.46
+		},
+		{
+			"sections_avg": 97.5,
+			"mini": 97.5,
+			"maxi": 97.5,
+			"avgg": 97.5
+		},
+		{
+			"sections_avg": 98.75,
+			"mini": 98.75,
+			"maxi": 98.75,
+			"avgg": 98.75
+		},
+		{
+			"sections_avg": 96.03,
+			"mini": 96.03,
+			"maxi": 96.03,
+			"avgg": 96.03
+		},
+		{
+			"sections_avg": 98.08,
+			"mini": 98.08,
+			"maxi": 98.08,
+			"avgg": 98.08
+		},
+		{
+			"sections_avg": 98.7,
+			"mini": 98.7,
+			"maxi": 98.7,
+			"avgg": 98.7
+		},
+		{
+			"sections_avg": 98.36,
+			"mini": 98.36,
+			"maxi": 98.36,
+			"avgg": 98.36
+		},
+		{
+			"sections_avg": 97.29,
+			"mini": 97.29,
+			"maxi": 97.29,
+			"avgg": 97.29
+		},
+		{
+			"sections_avg": 96.21,
+			"mini": 96.21,
+			"maxi": 96.21,
+			"avgg": 96.21
+		},
+		{
+			"sections_avg": 96.24,
+			"mini": 96.24,
+			"maxi": 96.24,
+			"avgg": 96.24
+		},
+		{
+			"sections_avg": 98.8,
+			"mini": 98.8,
+			"maxi": 98.8,
+			"avgg": 98.8
+		},
+		{
+			"sections_avg": 97.41,
+			"mini": 97.41,
+			"maxi": 97.41,
+			"avgg": 97.41
+		},
+		{
+			"sections_avg": 98.58,
+			"mini": 98.58,
+			"maxi": 98.58,
+			"avgg": 98.58
+		},
+		{
+			"sections_avg": 98.76,
+			"mini": 98.76,
+			"maxi": 98.76,
+			"avgg": 98.76
+		},
+		{
+			"sections_avg": 96.23,
+			"mini": 96.23,
+			"maxi": 96.23,
+			"avgg": 96.23
+		},
+		{
+			"sections_avg": 98.45,
+			"mini": 98.45,
+			"maxi": 98.45,
+			"avgg": 98.45
+		},
+		{
+			"sections_avg": 97.78,
+			"mini": 97.78,
+			"maxi": 97.78,
+			"avgg": 97.78
+		},
+		{
+			"sections_avg": 97.69,
+			"mini": 97.69,
+			"maxi": 97.69,
+			"avgg": 97.69
+		},
+		{
+			"sections_avg": 97.09,
+			"mini": 97.09,
+			"maxi": 97.09,
+			"avgg": 97.09
+		},
+		{
+			"sections_avg": 97.67,
+			"mini": 97.67,
+			"maxi": 97.67,
+			"avgg": 97.67
+		},
+		{
+			"sections_avg": 96.47,
+			"mini": 96.47,
+			"maxi": 96.47,
+			"avgg": 96.47
+		},
+		{
+			"sections_avg": 96.4,
+			"mini": 96.4,
+			"maxi": 96.4,
+			"avgg": 96.4
+		},
+		{
+			"sections_avg": 96.36,
+			"mini": 96.36,
+			"maxi": 96.36,
+			"avgg": 96.36
+		},
+		{
+			"sections_avg": 96.06,
+			"mini": 96.06,
+			"maxi": 96.06,
+			"avgg": 96.06
+		},
+		{
+			"sections_avg": 96.1,
+			"mini": 96.1,
+			"maxi": 96.1,
+			"avgg": 96.1
+		},
+		{
+			"sections_avg": 96.44,
+			"mini": 96.44,
+			"maxi": 96.44,
+			"avgg": 96.44
+		},
+		{
+			"sections_avg": 96.25,
+			"mini": 96.25,
+			"maxi": 96.25,
+			"avgg": 96.25
+		},
+		{
+			"sections_avg": 97.25,
+			"mini": 97.25,
+			"maxi": 97.25,
+			"avgg": 97.25
+		},
+		{
+			"sections_avg": 99.78,
+			"mini": 99.78,
+			"maxi": 99.78,
+			"avgg": 99.78
+		},
+		{
+			"sections_avg": 97.48,
+			"mini": 97.48,
+			"maxi": 97.48,
+			"avgg": 97.48
+		},
+		{
+			"sections_avg": 96.83,
+			"mini": 96.83,
+			"maxi": 96.83,
+			"avgg": 96.83
+		},
+		{
+			"sections_avg": 96.5,
+			"mini": 96.5,
+			"maxi": 96.5,
+			"avgg": 96.5
+		},
+		{
+			"sections_avg": 96.59,
+			"mini": 96.59,
+			"maxi": 96.59,
+			"avgg": 96.59
+		},
+		{
+			"sections_avg": 98.71,
+			"mini": 98.71,
+			"maxi": 98.71,
+			"avgg": 98.71
+		},
+		{
+			"sections_avg": 98.21,
+			"mini": 98.21,
+			"maxi": 98.21,
+			"avgg": 98.21
+		},
+		{
+			"sections_avg": 96.64,
+			"mini": 96.64,
+			"maxi": 96.64,
+			"avgg": 96.64
+		},
+		{
+			"sections_avg": 97.53,
+			"mini": 97.53,
+			"maxi": 97.53,
+			"avgg": 97.53
+		},
+		{
+			"sections_avg": 98.5,
+			"mini": 98.5,
+			"maxi": 98.5,
+			"avgg": 98.5
+		},
+		{
+			"sections_avg": 96.73,
+			"mini": 96.73,
+			"maxi": 96.73,
+			"avgg": 96.73
+		},
+		{
+			"sections_avg": 97.33,
+			"mini": 97.33,
+			"maxi": 97.33,
+			"avgg": 97.33
+		},
+		{
+			"sections_avg": 96.15,
+			"mini": 96.15,
+			"maxi": 96.15,
+			"avgg": 96.15
+		},
+		{
+			"sections_avg": 96.09,
+			"mini": 96.09,
+			"maxi": 96.09,
+			"avgg": 96.09
+		},
+		{
+			"sections_avg": 96.96,
+			"mini": 96.96,
+			"maxi": 96.96,
+			"avgg": 96.96
+		},
+		{
+			"sections_avg": 98.98,
+			"mini": 98.98,
+			"maxi": 98.98,
+			"avgg": 98.98
+		},
+		{
+			"sections_avg": 96.8,
+			"mini": 96.8,
+			"maxi": 96.8,
+			"avgg": 96.8
+		}
+	]
+}

@@ -3,17 +3,20 @@ import { StatusCodes } from "http-status-codes";
 import { Log } from "@ubccpsc310/project-support";
 import * as http from "http";
 import cors from "cors";
+import { InsightDatasetKind, InsightError, NotFoundError } from "../controller/IInsightFacade";
+import InsightFacade from "../controller/InsightFacade";
 
 export default class Server {
 	private readonly port: number;
 	private express: Application;
 	private server: http.Server | undefined;
+	private insightFacade: InsightFacade;
 
 	constructor(port: number) {
 		Log.info(`Server::<init>( ${port} )`);
 		this.port = port;
 		this.express = express();
-
+		this.insightFacade = new InsightFacade();
 		this.registerMiddleware();
 		this.registerRoutes();
 
@@ -89,6 +92,10 @@ export default class Server {
 		this.express.get("/echo/:msg", Server.echo);
 
 		// TODO: your other endpoints should go here
+		this.express.put("/dataset/:id/courses", this.addDataset.bind(this));
+		this.express.get("/datasets", this.listDatasets.bind(this));
+		this.express.delete("/dataset/:id", this.removeDataset.bind(this));
+		this.express.post("/query", this.performQuery.bind(this));
 	}
 
 	// The next two methods handle the echo service.
@@ -110,5 +117,72 @@ export default class Server {
 		} else {
 			return "Message not provided";
 		}
+	}
+
+	private async addDataset(req: Request, res: Response): Promise<void> {
+		try {
+			const id = req.params.id;
+			const kind = InsightDatasetKind.Sections; //since we are hardcoding it now
+
+			const content = Buffer.from(req.body).toString("base64");
+
+			const result = await this.insightFacade.addDataset(id, content, kind);
+			res.status(StatusCodes.OK).json({ result: result });
+		} catch (err: any) {
+			if (err instanceof InsightError) {
+				res.status(StatusCodes.BAD_REQUEST).json({ error: err.message });
+			} else {
+				res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: "An unexpected error occurred." });
+			}
+		}
+	}
+
+	private async listDatasets(req: Request, res: Response): Promise<void> {
+		try {
+			const result = await this.insightFacade.listDatasets();
+			res.status(StatusCodes.OK).json({ result: result });
+		} catch (err: any) {
+			res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err.message });
+		}
+	}
+
+	private async removeDataset(req: Request, res: Response): Promise<void> {
+		if (
+			!req.params.id ||
+			req.params.id.trim().length === 0 ||
+			req.params.id.includes("_") ||
+			req.params.id.match(/^\s*$/)
+		) {
+			res.status(StatusCodes.BAD_REQUEST).json({ error: "Invalid ID" });
+		}
+		try {
+			const result = await this.insightFacade.removeDataset(req.params.id);
+			res.status(StatusCodes.OK).json({ result: result });
+		} catch (err: any) {
+			if (err instanceof InsightError) {
+				res.status(StatusCodes.BAD_REQUEST).json({ error: err.message });
+			} else if (err instanceof NotFoundError) {
+				res.status(StatusCodes.NOT_FOUND).json({ error: err.message });
+			} else {
+				res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err.message });
+			}
+		}
+	}
+	private async performQuery(req: Request, res: Response): Promise<void> {
+		try {
+			const query = req.body; // Only the query is in the body
+
+			const result = await this.insightFacade.performQuery(query); // No ID passed here
+			res.status(StatusCodes.OK).json({ result: result });
+		} catch (err: any) {
+			if (err instanceof InsightError) {
+				res.status(StatusCodes.BAD_REQUEST).json({ error: err.message });
+			} else {
+				res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err.message });
+			}
+		}
+	}
+	public getExpressApp(): Application {
+		return this.express;
 	}
 }
