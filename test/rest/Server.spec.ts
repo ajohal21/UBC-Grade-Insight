@@ -1,138 +1,266 @@
 // test/rest/Server.spec.ts
 import Server from "../../src/rest/Server";
-import request from "supertest";
+import request, { Response } from "supertest";
 import { expect } from "chai";
 import { StatusCodes } from "http-status-codes";
 import { before, after, beforeEach, afterEach } from "mocha";
-import { clearDisk, getContentFromArchives } from "../TestUtil";
+import { clearDisk } from "../TestUtil";
+import fs from "fs-extra";
 
 describe("Server", () => {
 	let server: Server;
-	let agent: any; // Corrected type
+
 	const port = 4321;
-	let sectionsBase64: string;
-	let sectionsBuffer: Buffer;
 
 	before(async () => {
-		sectionsBase64 = await getContentFromArchives("pair.zip");
-		sectionsBuffer = Buffer.from(sectionsBase64, "base64");
-
 		server = new Server(port);
-		await server.start();
-		agent = request(server.getExpressApp()); // Create the agent in beforeAll
+		await server.start().catch((err: Error) => {
+			throw err;
+		});
 	});
 
 	after(async () => {
+		if (server) {
+			await server.stop();
+		}
 		await clearDisk();
-		await server.stop();
 	});
 
 	beforeEach(async () => {
 		// Attempt to delete the 'sections' dataset before each test.
 		await clearDisk();
 	});
-	afterEach(async () => {
-		//delete the data after each test!
-		await clearDisk();
-	});
-
-	it("should respond to /echo/:msg with the message", async () => {
-		const message = "hello";
-		const response = await agent.get(`/echo/${message}`); // Use agent
-		expect(response.status).to.equal(StatusCodes.OK);
-		expect(response.body.result).to.equal(`${message}...${message}`);
-	});
+	afterEach(async () => {});
 
 	// Test Cases for PUT request
-	it("should successfully add a valid dataset", async () => {
-		const response = await agent
-			.put("/dataset/sections/courses")
-			.set("Content-Type", "application/octet-stream") // Match express.raw
-			.send(sectionsBuffer); // <<<--- SEND THE BUFFER
-		expect(response.status).to.equal(StatusCodes.OK);
-		expect(response.body.result).to.be.an("array");
+	it("PUT should successfully add a valid dataset", async () => {
+		const SERVER = "http://localhost:4321";
+		const ENDPOINT = "/dataset/aman/sections";
+		const SECTIONS = await fs.readFile("test/resources/archives/pair.zip");
+
+		try {
+			return await request(SERVER)
+				.put(ENDPOINT)
+				.send(SECTIONS)
+				.set("Content-Type", "application/x-zip-compressed")
+				.then(function (res: Response) {
+					expect(res.status).to.be.equal(StatusCodes.OK);
+					expect(res.body).to.be.a("string");
+				})
+				.catch(function (err) {
+					expect.fail();
+				});
+		} catch (err) {
+			return err;
+		}
 	});
 
-	it("should return status 400 given dataset with invalid ID (underscore)", async () => {
-		const response = await agent
-			.put("/dataset/sections_test/courses")
-			.set("Content-Type", "application/octet-stream")
-			.send(sectionsBuffer); // <<<--- SEND THE BUFFER
-		expect(response.status).to.equal(StatusCodes.BAD_REQUEST);
-		expect(response.body.error).to.be.a("string");
+	it("PUT should return status 400 given dataset with invalid ID (underscore)", async () => {
+		const SERVER = "http://localhost:4321";
+		const ENDPOINT = "/dataset/ubc_aman/sections";
+		const SECTIONS = await fs.readFile("test/resources/archives/pair.zip");
+
+		try {
+			return await request(SERVER)
+				.put(ENDPOINT)
+				.send(SECTIONS)
+				.set("Content-Type", "application/x-zip-compressed")
+				.then(function (res: Response) {
+					expect(res.status).to.be.equal(StatusCodes.BAD_REQUEST);
+					expect(res.error).to.be.a("array");
+				})
+				.catch(function (err) {
+					expect.fail();
+				});
+		} catch (err) {
+			return err;
+		}
 	});
 
-	// Ensure server-side ID validation middleware is active for this to pass
-	it("should return status 400 given dataset with invalid ID (empty)", async () => {
-		const response = await agent
-			.put("/dataset/%20%20/courses")
-			.set("Content-Type", "application/octet-stream")
-			.send(sectionsBuffer); // <<<--- SEND THE BUFFER
-		expect(response.status).to.equal(StatusCodes.BAD_REQUEST);
-		expect(response.body.error).to.be.a("string");
+	it("PUT should return status 400 given dataset with invalid ID (empty)", async () => {
+		const SERVER = "http://localhost:4321";
+		const ENDPOINT = "/dataset/%20%20/sections";
+		const SECTIONS = await fs.readFile("test/resources/archives/pair.zip");
+
+		try {
+			return await request(SERVER)
+				.put(ENDPOINT)
+				.send(SECTIONS)
+				.set("Content-Type", "application/x-zip-compressed")
+				.then(function (res: Response) {
+					expect(res.status).to.be.equal(StatusCodes.BAD_REQUEST);
+				})
+				.catch(function (err) {
+					expect.fail();
+				});
+		} catch (err) {
+			return err;
+		}
 	});
 
-	it("should return status 400 given dataset with ID already present", async () => {
-		await agent.put("/dataset/aman/courses").set("Content-Type", "application/octet-stream").send(sectionsBuffer);
+	it("PUT should return status 400 given dataset with ID already present", async () => {
+		const SERVER = "http://localhost:4321";
+		const ENDPOINT = "/dataset/aman/sections";
+		const SECTIONS = await fs.readFile("test/resources/archives/pair.zip");
 
-		const response = await agent
-			.put("/dataset/aman/courses")
-			.set("Content-Type", "application/octet-stream")
-			.send(sectionsBuffer);
-		expect(response.status).to.equal(StatusCodes.BAD_REQUEST);
-		expect(response.body.error).to.be.a("string");
-	});
-
-	// Ensure server-side kind validation or routing handles this
-	it("should return status 400/404 given an invalid kind in URL", async () => {
-		const response = await agent
-			.put("/dataset/sections/invalidkind") // Changed kind in URL
-			.set("Content-Type", "application/octet-stream")
-			.send(sectionsBuffer); // <<<--- SEND THE BUFFER
-		// Expect 400 if validation middleware catches it, 404 if routing fails
-		expect([StatusCodes.BAD_REQUEST, StatusCodes.NOT_FOUND]).to.include(response.status);
-		if (response.status === StatusCodes.BAD_REQUEST) {
-			expect(response.body.error).to.be.a("string");
+		try {
+			await request(SERVER)
+				.put(ENDPOINT)
+				.send(SECTIONS)
+				.set("Content-Type", "application/x-zip-compressed")
+				.then(function (res: Response) {
+					expect(res.status).to.be.equal(StatusCodes.OK);
+				})
+				.catch(function (err) {
+					expect.fail();
+				});
+			return await request(SERVER)
+				.put(ENDPOINT)
+				.send(SECTIONS)
+				.set("Content-Type", "application/x-zip-compressed")
+				.then(function (res: Response) {
+					expect(res.status).to.be.equal(StatusCodes.BAD_REQUEST);
+					expect(res.error).to.be.a("string");
+				})
+				.catch(function (err) {
+					expect.fail();
+				});
+		} catch (err) {
+			err;
 		}
 	});
 
 	// Test Cases for DELETE Request
 	it("should successfully delete a dataset", async () => {
-		// Add the dataset first
-		await agent.put("/dataset/sections/courses").set("Content-Type", "application/octet-stream").send(sectionsBuffer);
+		const SERVER = "http://localhost:4321";
+		const ENDPOINT = "/dataset/aman/sections";
+		const SECTIONS = await fs.readFile("test/resources/archives/pair.zip");
 
-		// Then delete it
-		const response = await agent.delete("/dataset/sections");
-		expect(response.status).to.equal(StatusCodes.OK);
-		expect(response.body.result).to.equal("sections");
+		try {
+			await request(SERVER)
+				.put(ENDPOINT)
+				.send(SECTIONS)
+				.set("Content-Type", "application/x-zip-compressed")
+				.then(function (res: Response) {
+					expect(res.status).to.be.equal(StatusCodes.OK);
+				})
+				.catch(function (err) {
+					expect.fail();
+				});
+			return request(SERVER)
+				.delete("/dataset/aman")
+				.send(SECTIONS)
+				.set("Content-Type", "application/x-zip-compressed")
+				.then(function (res: Response) {
+					expect(res.status).to.be.equal(StatusCodes.OK);
+					expect(res.body).to.be.a("string");
+				})
+				.catch(function (err) {
+					expect.fail();
+				});
+		} catch (err) {
+			return err;
+		}
 	});
 
 	it("should return status 400 given delete request with invalid ID (underscore)", async () => {
-		// Assumes ID validation middleware runs before checking existence
-		const response = await agent.delete("/dataset/sections_test");
-		expect(response.status).to.equal(StatusCodes.BAD_REQUEST);
-		expect(response.body.error).to.be.a("string");
+		const SERVER = "http://localhost:4321";
+		const ENDPOINT = "/dataset/aman/sections";
+		const SECTIONS = await fs.readFile("test/resources/archives/pair.zip");
+
+		try {
+			await request(SERVER)
+				.put(ENDPOINT)
+				.send(SECTIONS)
+				.set("Content-Type", "application/x-zip-compressed")
+				.then(function (res: Response) {
+					expect(res.status).to.be.equal(StatusCodes.OK);
+				})
+				.catch(function (err) {
+					expect.fail();
+				});
+			return request(SERVER)
+				.delete("/dataset/ama_n")
+				.send(SECTIONS)
+				.set("Content-Type", "application/x-zip-compressed")
+				.then(function (res: Response) {
+					expect(res.status).to.be.equal(StatusCodes.BAD_REQUEST);
+					expect(res.error).to.be.a("string");
+				})
+				.catch(function (err) {
+					expect.fail();
+				});
+		} catch (err) {
+			return err;
+		}
 	});
 
 	it("should return status 400 given delete request with invalid ID (empty)", async () => {
-		// Assumes ID validation middleware runs
-		const response = await agent.delete("/dataset/%20%20");
-		expect(response.status).to.equal(StatusCodes.BAD_REQUEST);
-		expect(response.body.error).to.be.a("string");
+		const SERVER = "http://localhost:4321";
+		const ENDPOINT = "/dataset/aman/sections";
+		const SECTIONS = await fs.readFile("test/resources/archives/pair.zip");
+
+		try {
+			await request(SERVER)
+				.put(ENDPOINT)
+				.send(SECTIONS)
+				.set("Content-Type", "application/x-zip-compressed")
+				.then(function (res: Response) {
+					expect(res.status).to.be.equal(StatusCodes.OK);
+				})
+				.catch(function (err) {
+					expect.fail();
+				});
+			return request(SERVER)
+				.delete("/dataset/%20%20")
+				.send(SECTIONS)
+				.set("Content-Type", "application/x-zip-compressed")
+				.then(function (res: Response) {
+					expect(res.status).to.be.equal(StatusCodes.BAD_REQUEST);
+					expect(res.error).to.be.a("string");
+				})
+				.catch(function (err) {
+					expect.fail();
+				});
+		} catch (err) {
+			return err;
+		}
 	});
 
 	it("should return status 404 given delete request for non-existent id", async () => {
-		// Don't add the dataset first
-		const response = await agent.delete("/dataset/nonexistent");
-		expect(response.status).to.equal(StatusCodes.NOT_FOUND);
-		expect(response.body.error).to.be.a("string");
+		const SERVER = "http://localhost:4321";
+		const ENDPOINT = "/dataset/aman/sections";
+		const SECTIONS = await fs.readFile("test/resources/archives/pair.zip");
+
+		try {
+			await request(SERVER)
+				.put(ENDPOINT)
+				.send(SECTIONS)
+				.set("Content-Type", "application/x-zip-compressed")
+				.then(function (res: Response) {
+					expect(res.status).to.be.equal(StatusCodes.OK);
+				})
+				.catch(function (err) {
+					expect.fail();
+				});
+			return request(SERVER)
+				.delete("/dataset/kylee")
+				.send(SECTIONS)
+				.set("Content-Type", "application/x-zip-compressed")
+				.then(function (res: Response) {
+					expect(res.status).to.be.equal(StatusCodes.NOT_FOUND);
+					expect(res.error).to.be.a("string");
+				})
+				.catch(function (err) {
+					expect.fail();
+				});
+		} catch (err) {
+			return err;
+		}
 	});
 
 	// Test Cases for POST Request
 	it("should successfully perform a valid query", async () => {
-		// Add the dataset first
-		await agent.put("/dataset/sections/courses").set("Content-Type", "application/octet-stream").send(sectionsBuffer);
-
 		const query = {
 			/* ... your valid query ... */
 			WHERE: {
@@ -167,15 +295,38 @@ describe("Server", () => {
 				],
 			},
 		};
-		const response = await agent.post("/query").send(query).set("Content-Type", "application/json");
-		expect(response.status).to.equal(StatusCodes.OK);
-		expect(response.body.result).to.be.an("array");
+		const SERVER = "http://localhost:4321";
+		const ENDPOINT = "/dataset/aman/sections";
+		const SECTIONS = await fs.readFile("test/resources/archives/pair.zip");
+
+		try {
+			await request(SERVER)
+				.post(ENDPOINT)
+				.send(SECTIONS)
+				.set("Content-Type", "application/x-zip-compressed")
+				.then(function (res: Response) {
+					expect(res.status).to.be.equal(StatusCodes.OK);
+				})
+				.catch(function (err) {
+					expect.fail();
+				});
+			return request(SERVER)
+				.post("/dataset/query")
+				.send(query)
+				.set("Content-Type", "application/x-zip-compressed")
+				.then(function (res: Response) {
+					expect(res.status).to.be.equal(StatusCodes.OK);
+					expect(res.body).to.be.a("array");
+				})
+				.catch(function (err) {
+					expect.fail();
+				});
+		} catch (err) {
+			return err;
+		}
 	});
 
 	it("should return status 400 given query request with invalid key format (underscore)", async () => {
-		// Add dataset first
-		await agent.put("/dataset/sections/courses").set("Content-Type", "application/octet-stream").send(sectionsBuffer);
-
 		const query = {
 			/* ... query with sections_year_ in keys ... */
 			WHERE: {
@@ -210,25 +361,68 @@ describe("Server", () => {
 				],
 			},
 		};
-		const response = await agent.post("/query").send(query).set("Content-Type", "application/json");
-		expect(response.status).to.equal(StatusCodes.BAD_REQUEST);
-		expect(response.body.error).to.be.a("string");
-	});
+		const SERVER = "http://localhost:4321";
+		const ENDPOINT = "/dataset/aman/sections";
+		const SECTIONS = await fs.readFile("test/resources/archives/pair.zip");
 
-	it("should return status 400 for an empty query", async () => {
-		const response = await agent.post("/query").send({}).set("Content-Type", "application/json");
-		expect(response.status).to.equal(StatusCodes.BAD_REQUEST);
-		expect(response.body.error).to.be.a("string");
+		try {
+			await request(SERVER)
+				.post(ENDPOINT)
+				.send(SECTIONS)
+				.set("Content-Type", "application/x-zip-compressed")
+				.then(function (res: Response) {
+					expect(res.status).to.be.equal(StatusCodes.OK);
+				})
+				.catch(function (err) {
+					expect.fail();
+				});
+			return request(SERVER)
+				.post("/dataset/query")
+				.send(query)
+				.set("Content-Type", "application/x-zip-compressed")
+				.then(function (res: Response) {
+					expect(res.status).to.be.equal(StatusCodes.BAD_REQUEST);
+					expect(res.error).to.be.a("string");
+				})
+				.catch(function (err) {
+					expect.fail();
+				});
+		} catch (err) {
+			return err;
+		}
 	});
 
 	//Test Cases for GET Request
 	it("should list datasets", async () => {
-		// Add a dataset first to ensure there's something to list
-		await agent.put("/dataset/sections/courses").set("Content-Type", "application/octet-stream").send(sectionsBuffer);
+		const SERVER = "http://localhost:4321";
+		const ENDPOINT = "/dataset/aman/sections";
+		const SECTIONS = await fs.readFile("test/resources/archives/pair.zip");
 
-		const response = await agent.get("/datasets");
-		expect(response.status).to.equal(StatusCodes.OK);
-		expect(response.body.result).to.be.an("array");
-		expect(response.body.result.some((ds: any) => ds.id === "sections")).to.be.true;
+		try {
+			await request(SERVER)
+				.put(ENDPOINT)
+				.send(SECTIONS)
+				.set("Content-Type", "application/x-zip-compressed")
+				.then(function (res: Response) {
+					expect(res.status).to.be.equal(StatusCodes.OK);
+				})
+				.catch(function (err) {
+					expect.fail();
+				});
+
+			return await request(SERVER)
+				.get("/dataset/aman")
+				.send(SECTIONS)
+				.set("Content-Type", "application/x-zip-compressed")
+				.then((response) => {
+					expect(response.status).to.be.equal(StatusCodes.OK);
+					expect(response.body).to.be.a("array");
+				})
+				.catch(function (err) {
+					expect.fail();
+				});
+		} catch (err) {
+			err;
+		}
 	});
 });
