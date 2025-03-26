@@ -36,7 +36,7 @@ function AddDatasetSimple({ onDatasetAdded }: AddDatasetProps) { // Receive the 
 			const fileContent: ArrayBuffer = await readFileAsArrayBuffer(file);
 			console.log("File Content:", fileContent); // Log before sending
 			// Hardcode 'courses' as the kind
-			const response = await fetch(`/dataset/${datasetId}/courses`, {
+			const response = await fetch(`/dataset/${datasetId}/sections`, {
 				method: 'PUT',
 				headers: {
 					'Content-Type': 'application/octet-stream',

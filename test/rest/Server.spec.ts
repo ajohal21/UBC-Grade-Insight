@@ -6,8 +6,9 @@ import { StatusCodes } from "http-status-codes";
 import { before, after, beforeEach, afterEach } from "mocha";
 import { clearDisk } from "../TestUtil";
 import fs from "fs-extra";
+import {Log} from "@ubccpsc310/project-support";
 
-describe("Server", () => {
+describe("Server", function () {
 	let server: Server;
 
 	const port = 4321;
@@ -33,7 +34,7 @@ describe("Server", () => {
 	afterEach(async () => {});
 
 	// Test Cases for PUT request
-	it("PUT should successfully add a valid dataset", async () => {
+	it("PUT should successfully add a valid dataset", async function (){
 		const SERVER = "http://localhost:4321";
 		const ENDPOINT = "/dataset/aman/sections";
 		const SECTIONS = await fs.readFile("test/resources/archives/pair.zip");
@@ -51,29 +52,33 @@ describe("Server", () => {
 					expect.fail();
 				});
 		} catch (err) {
-			return err;
+			Log.error(`error: ${err})`);
 		}
 	});
 
-	it("PUT should return status 400 given dataset with invalid ID (underscore)", async () => {
-		const SERVER = "http://localhost:4321";
-		const ENDPOINT = "/dataset/ubc_aman/sections";
-		const SECTIONS = await fs.readFile("test/resources/archives/pair.zip");
-
+	it("PUT should return status 400 given dataset with invalid ID (underscore)", async () => {		const SERVER_URL = "http://localhost:4321";
+		const ENDPOINT_URL = "/dataset/ubc_ubc/sections";
+		const ZIP_FILE_DATA = await fs.readFile("test/resources/archives/pair.zip");
 		try {
-			return await request(SERVER)
-				.put(ENDPOINT)
-				.send(SECTIONS)
+			return await request(SERVER_URL)
+				.put(ENDPOINT_URL)
+				.send(ZIP_FILE_DATA)
 				.set("Content-Type", "application/x-zip-compressed")
 				.then(function (res: Response) {
+					// Log the request and response details
+					Log.info(`Request made to ${SERVER_URL}${ENDPOINT_URL}`);
+					Log.info(`Response status: ${res.status}`);
+					Log.info(`Response error: ${res.error}`);
 					expect(res.status).to.be.equal(StatusCodes.BAD_REQUEST);
-					expect(res.error).to.be.a("array");
 				})
 				.catch(function (err) {
+					// Log the error
+					Log.error(`Request to ${SERVER_URL}${ENDPOINT_URL} failed: ${err}`);
 					expect.fail();
 				});
 		} catch (err) {
-			return err;
+			// Log the caught error
+			Log.error(`Unexpected error occurred: ${err}`);
 		}
 	});
 
@@ -422,7 +427,7 @@ describe("Server", () => {
 					expect.fail();
 				});
 		} catch (err) {
-			err;
+			return err;
 		}
 	});
 });

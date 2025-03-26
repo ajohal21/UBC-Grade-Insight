@@ -1,9 +1,9 @@
-import express, { Application, Request, Response } from "express";
-import { StatusCodes } from "http-status-codes";
-import { Log } from "@ubccpsc310/project-support";
+import express, {Application, Request, Response} from "express";
+import {StatusCodes} from "http-status-codes";
+import {Log} from "@ubccpsc310/project-support";
 import * as http from "http";
 import cors from "cors";
-import { InsightDatasetKind, InsightError, NotFoundError } from "../controller/IInsightFacade";
+import {InsightDatasetKind, InsightError, NotFoundError} from "../controller/IInsightFacade";
 import InsightFacade from "../controller/InsightFacade";
 
 export default class Server {
@@ -92,7 +92,7 @@ export default class Server {
 		this.express.get("/echo/:msg", Server.echo);
 
 		// TODO: your other endpoints should go here
-		this.express.put("/dataset/:id/courses", this.addDataset.bind(this));
+		this.express.put("/dataset/:id/:kind", this.addDataset.bind(this));
 		this.express.get("/datasets", this.listDatasets.bind(this));
 		this.express.delete("/dataset/:id", this.removeDataset.bind(this));
 		this.express.post("/query", this.performQuery.bind(this));
@@ -120,26 +120,34 @@ export default class Server {
 	}
 
 	private async addDataset(req: Request, res: Response): Promise<void> {
+		const {id, kind} = req.params;
+		const content = req.body.toString("base64");
+		let kindType: InsightDatasetKind = InsightDatasetKind.Sections;
+
+		if (kind === "sections") {
+			kindType = InsightDatasetKind.Sections;
+		} else if (kind === "rooms") {
+			kindType = InsightDatasetKind.Rooms;
+		} else {
+			res.status(StatusCodes.BAD_REQUEST).json({error: "Invalid kind"});
+			return;
+		}
+
 		try {
-			const id = req.params.id;
-			const kind = InsightDatasetKind.Sections; //since we are hardcoding it now
-
-			const content = Buffer.from(req.body).toString("base64");
-
-			const result = await this.insightFacade.addDataset(id, content, kind);
+			const result = await new InsightFacade().addDataset(id, content, kindType);
 			res.status(StatusCodes.OK).json({ result: result });
 		} catch (err: any) {
 			if (err instanceof InsightError) {
 				res.status(StatusCodes.BAD_REQUEST).json({ error: err.message });
 			} else {
-				res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: "An unexpected error occurred." });
+				res.status(StatusCodes.BAD_REQUEST).json({ error: "" });
 			}
 		}
 	}
 
 	private async listDatasets(req: Request, res: Response): Promise<void> {
 		try {
-			const result = await this.insightFacade.listDatasets();
+			const result = await new InsightFacade().listDatasets();
 			res.status(StatusCodes.OK).json({ result: result });
 		} catch (err: any) {
 			res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err.message });
@@ -147,16 +155,9 @@ export default class Server {
 	}
 
 	private async removeDataset(req: Request, res: Response): Promise<void> {
-		if (
-			!req.params.id ||
-			req.params.id.trim().length === 0 ||
-			req.params.id.includes("_") ||
-			req.params.id.match(/^\s*$/)
-		) {
-			res.status(StatusCodes.BAD_REQUEST).json({ error: "Invalid ID" });
-		}
+		const { id } = req.params;
 		try {
-			const result = await this.insightFacade.removeDataset(req.params.id);
+			const result = await new InsightFacade().removeDataset(id);
 			res.status(StatusCodes.OK).json({ result: result });
 		} catch (err: any) {
 			if (err instanceof InsightError) {
@@ -164,7 +165,7 @@ export default class Server {
 			} else if (err instanceof NotFoundError) {
 				res.status(StatusCodes.NOT_FOUND).json({ error: err.message });
 			} else {
-				res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err.message });
+				res.status(StatusCodes.BAD_REQUEST);
 			}
 		}
 	}
@@ -172,13 +173,13 @@ export default class Server {
 		try {
 			const query = req.body; // Only the query is in the body
 
-			const result = await this.insightFacade.performQuery(query); // No ID passed here
+			const result = await new InsightFacade().performQuery(query); // No ID passed here
 			res.status(StatusCodes.OK).json({ result: result });
 		} catch (err: any) {
 			if (err instanceof InsightError) {
 				res.status(StatusCodes.BAD_REQUEST).json({ error: err.message });
 			} else {
-				res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err.message });
+				res.status(StatusCodes.BAD_REQUEST);
 			}
 		}
 	}
