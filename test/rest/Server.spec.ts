@@ -6,7 +6,7 @@ import { StatusCodes } from "http-status-codes";
 import { before, after, beforeEach, afterEach } from "mocha";
 import { clearDisk } from "../TestUtil";
 import fs from "fs-extra";
-import {Log} from "@ubccpsc310/project-support";
+import { Log } from "@ubccpsc310/project-support";
 
 describe("Server", function () {
 	let server: Server;
@@ -34,7 +34,7 @@ describe("Server", function () {
 	afterEach(async () => {});
 
 	// Test Cases for PUT request
-	it("PUT should successfully add a valid dataset", async function (){
+	it("PUT should successfully add a valid dataset", async function () {
 		const SERVER = "http://localhost:4321";
 		const ENDPOINT = "/dataset/aman/sections";
 		const SECTIONS = await fs.readFile("test/resources/archives/pair.zip");
@@ -46,7 +46,7 @@ describe("Server", function () {
 				.set("Content-Type", "application/x-zip-compressed")
 				.then(function (res: Response) {
 					expect(res.status).to.be.equal(StatusCodes.OK);
-					expect(res.body).to.be.a("string");
+					expect(res.body.result).to.be.equal("[aman]");
 				})
 				.catch(function (err) {
 					expect.fail();
@@ -56,7 +56,8 @@ describe("Server", function () {
 		}
 	});
 
-	it("PUT should return status 400 given dataset with invalid ID (underscore)", async () => {		const SERVER_URL = "http://localhost:4321";
+	it("PUT should return status 400 given dataset with invalid ID (underscore)", async () => {
+		const SERVER_URL = "http://localhost:4321";
 		const ENDPOINT_URL = "/dataset/ubc_ubc/sections";
 		const ZIP_FILE_DATA = await fs.readFile("test/resources/archives/pair.zip");
 		try {
@@ -65,20 +66,14 @@ describe("Server", function () {
 				.send(ZIP_FILE_DATA)
 				.set("Content-Type", "application/x-zip-compressed")
 				.then(function (res: Response) {
-					// Log the request and response details
-					Log.info(`Request made to ${SERVER_URL}${ENDPOINT_URL}`);
-					Log.info(`Response status: ${res.status}`);
-					Log.info(`Response error: ${res.error}`);
 					expect(res.status).to.be.equal(StatusCodes.BAD_REQUEST);
+					expect(res.body.result).to.be.a("string");
 				})
 				.catch(function (err) {
-					// Log the error
-					Log.error(`Request to ${SERVER_URL}${ENDPOINT_URL} failed: ${err}`);
 					expect.fail();
 				});
 		} catch (err) {
-			// Log the caught error
-			Log.error(`Unexpected error occurred: ${err}`);
+			err;
 		}
 	});
 
@@ -94,6 +89,8 @@ describe("Server", function () {
 				.set("Content-Type", "application/x-zip-compressed")
 				.then(function (res: Response) {
 					expect(res.status).to.be.equal(StatusCodes.BAD_REQUEST);
+					Log.info("TYPE OF RES", res.body);
+					expect(res.body.result).to.be.a("string");
 				})
 				.catch(function (err) {
 					expect.fail();
@@ -125,7 +122,8 @@ describe("Server", function () {
 				.set("Content-Type", "application/x-zip-compressed")
 				.then(function (res: Response) {
 					expect(res.status).to.be.equal(StatusCodes.BAD_REQUEST);
-					expect(res.error).to.be.a("string");
+					Log.info("RES body error:", res.body);
+					expect(res.body).to.have.property("error").that.is.a("string");
 				})
 				.catch(function (err) {
 					expect.fail();
@@ -158,7 +156,8 @@ describe("Server", function () {
 				.set("Content-Type", "application/x-zip-compressed")
 				.then(function (res: Response) {
 					expect(res.status).to.be.equal(StatusCodes.OK);
-					expect(res.body).to.be.a("string");
+					Log.info("RESULT IS:", res.body);
+					expect(res.body.result).to.be.equal("aman");
 				})
 				.catch(function (err) {
 					expect.fail();
@@ -190,7 +189,7 @@ describe("Server", function () {
 				.set("Content-Type", "application/x-zip-compressed")
 				.then(function (res: Response) {
 					expect(res.status).to.be.equal(StatusCodes.BAD_REQUEST);
-					expect(res.error).to.be.a("string");
+					expect(res.body).to.have.property("error").that.is.a("string");
 				})
 				.catch(function (err) {
 					expect.fail();
@@ -222,7 +221,7 @@ describe("Server", function () {
 				.set("Content-Type", "application/x-zip-compressed")
 				.then(function (res: Response) {
 					expect(res.status).to.be.equal(StatusCodes.BAD_REQUEST);
-					expect(res.error).to.be.a("string");
+					expect(res.body).to.have.property("error").that.is.a("string");
 				})
 				.catch(function (err) {
 					expect.fail();
@@ -254,7 +253,7 @@ describe("Server", function () {
 				.set("Content-Type", "application/x-zip-compressed")
 				.then(function (res: Response) {
 					expect(res.status).to.be.equal(StatusCodes.NOT_FOUND);
-					expect(res.error).to.be.a("string");
+					expect(res.body).to.have.property("error").that.is.a("string");
 				})
 				.catch(function (err) {
 					expect.fail();

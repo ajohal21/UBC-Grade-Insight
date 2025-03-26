@@ -1,9 +1,9 @@
-import express, {Application, Request, Response} from "express";
-import {StatusCodes} from "http-status-codes";
-import {Log} from "@ubccpsc310/project-support";
+import express, { Application, Request, Response } from "express";
+import { StatusCodes } from "http-status-codes";
+import { Log } from "@ubccpsc310/project-support";
 import * as http from "http";
 import cors from "cors";
-import {InsightDatasetKind, InsightError, NotFoundError} from "../controller/IInsightFacade";
+import { InsightDatasetKind, InsightError, NotFoundError } from "../controller/IInsightFacade";
 import InsightFacade from "../controller/InsightFacade";
 
 export default class Server {
@@ -120,7 +120,7 @@ export default class Server {
 	}
 
 	private async addDataset(req: Request, res: Response): Promise<void> {
-		const {id, kind} = req.params;
+		const { id, kind } = req.params;
 		const content = req.body.toString("base64");
 		let kindType: InsightDatasetKind = InsightDatasetKind.Sections;
 
@@ -129,7 +129,7 @@ export default class Server {
 		} else if (kind === "rooms") {
 			kindType = InsightDatasetKind.Rooms;
 		} else {
-			res.status(StatusCodes.BAD_REQUEST).json({error: "Invalid kind"});
+			res.status(StatusCodes.BAD_REQUEST).json({ error: "Invalid kind" });
 			return;
 		}
 
